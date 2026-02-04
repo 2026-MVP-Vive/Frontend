@@ -1,14 +1,23 @@
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { useNavigate } from "react-router-dom"
 
 export default function Login() {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
+  const navigate = useNavigate()
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
     console.log("Login attempt:", { username, password })
+
+    // 간단한 로그인 처리 (실제로는 API 호출)
+    if (username.startsWith("mentee")) {
+      navigate("/mentee/planner")
+    } else if (username.startsWith("mentor")) {
+      navigate("/mentor/students")
+    }
   }
 
   return (
