@@ -2,21 +2,58 @@ import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useNavigate } from "react-router-dom"
+import { detectRole, setUserRole, setAuthToken, setUsername } from "@/utils/auth"
 
 export default function Login() {
-  const [username, setUsername] = useState("")
+  const [username, setUsernameInput] = useState("")
   const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Login attempt:", { username, password })
+    setError("")
+    setIsLoading(true)
 
-    // 간단한 로그인 처리 (실제로는 API 호출)
-    if (username.startsWith("mentee")) {
-      navigate("/mentee/planner")
-    } else if (username.startsWith("mentor")) {
-      navigate("/mentor/students")
+    try {
+      // 간단한 유효성 검사
+      if (!username || !password) {
+        setError("아이디와 비밀번호를 입력해주세요.")
+        return
+      }
+
+      // 역할 판별
+      const role = detectRole(username)
+
+      if (!role) {
+        setError("유효하지 않은 계정입니다. 관리자에게 문의하세요.")
+        return
+      }
+
+      // TODO: 실제 API 호출로 대체 필요
+      // const response = await fetch('/api/auth/login', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ username, password })
+      // })
+
+      // Mock: 로그인 성공 시뮬레이션 (임시 토큰 생성)
+      const mockToken = `mock_token_${Date.now()}`
+
+      // sessionStorage에 인증 정보 저장
+      setAuthToken(mockToken)
+      setUserRole(role)
+      setUsername(username)
+
+      // 홈으로 이동 (역할별 레이아웃은 /home에서 처리)
+      navigate('/home')
+
+    } catch (err) {
+      setError("로그인 중 오류가 발생했습니다. 다시 시도해주세요.")
+      console.error("Login error:", err)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -37,6 +74,13 @@ export default function Login() {
       <div className="flex-1 bg-gray-50 px-6 py-8">
         <div className="bg-white rounded-2xl px-8 py-10 shadow-sm">
           <form onSubmit={handleLogin} className="space-y-6">
+            {/* 에러 메시지 */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+
             <div>
               <label
                 htmlFor="username"
@@ -49,7 +93,7 @@ export default function Login() {
                 type="text"
                 placeholder="test_mentee1"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) => setUsernameInput(e.target.value)}
               />
             </div>
 
@@ -69,8 +113,13 @@ export default function Login() {
               />
             </div>
 
-            <Button type="submit" size="lg" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-              로그인
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              disabled={isLoading}
+            >
+              {isLoading ? "로그인 중..." : "로그인"}
             </Button>
           </form>
 

@@ -1,7 +1,15 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
+// Layouts
+import MentorLayout from './layouts/MentorLayout'
+import MenteeLayout from './layouts/MenteeLayout'
+
+// Components
+import { ProtectedRoute } from './components/common/ProtectedRoute'
+
 // Pages
 import Login from './pages/Login'
+import Home from './pages/Home'
 import MentiMain from './pages/MentiMain'
 import TaskDetail from './pages/mentee/TaskDetail'
 import Feedback from './pages/mentee/Feedback'
@@ -14,26 +22,53 @@ import Solution from './pages/mentor/Solution'
 function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-gray-200 flex items-center justify-center">
-        <div className="w-full max-w-[480px] min-h-screen bg-white shadow-xl relative">
-          <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="/login" element={<Login />} />
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/login" element={<Login />} />
 
-            {/* 멘티 페이지 */}
-            <Route path="/mentee/planner" element={<MentiMain />} />
-            <Route path="/mentee/task/:id" element={<TaskDetail />} />
-            <Route path="/mentee/feedback/:date" element={<Feedback />} />
-            <Route path="/mentee/resources" element={<Materials />} />
+        {/* Home Route - redirects to role-specific home */}
+        <Route
+          path="/home"
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
 
-            {/* 멘토 페이지 */}
-            <Route path="/mentor/students" element={<MenteeList />} />
-            <Route path="/mentor/students/:id" element={<DetailManage />} />
-            <Route path="/mentor/students/:id/tasks/new" element={<TaskRegister />} />
-            <Route path="/mentor/students/:id/solutions" element={<Solution />} />
-          </Routes>
-        </div>
-      </div>
+        {/* Mentee Routes - 모바일 레이아웃 */}
+        <Route
+          path="/mentee"
+          element={
+            <ProtectedRoute>
+              <MenteeLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="planner" element={<MentiMain />} />
+          <Route path="task/:id" element={<TaskDetail />} />
+          <Route path="feedback/:date" element={<Feedback />} />
+          <Route path="resources" element={<Materials />} />
+        </Route>
+
+        {/* Mentor Routes - PC 레이아웃 */}
+        <Route
+          path="/mentor"
+          element={
+            <ProtectedRoute>
+              <MentorLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="students" element={<MenteeList />} />
+          <Route path="students/:id" element={<DetailManage />} />
+          <Route path="students/:id/tasks/new" element={<TaskRegister />} />
+          <Route path="students/:id/solutions" element={<Solution />} />
+        </Route>
+
+        {/* Default redirect */}
+        <Route path="/" element={<Navigate to="/home" replace />} />
+      </Routes>
     </BrowserRouter>
   )
 }
