@@ -1,9 +1,15 @@
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
+interface WeekDay {
+  day: string
+  date: number
+}
+
 interface HeaderProps {
   currentDate?: string
   showWeekCalendar?: boolean
   selectedDate?: number
+  weekDays?: WeekDay[]
   onDateSelect?: (date: number) => void
   onPrevious?: () => void
   onNext?: () => void
@@ -14,12 +20,7 @@ export default function Header({
   currentDate = "2025.01.27 월",
   showWeekCalendar = true,
   selectedDate = 27,
-  onDateSelect,
-  onPrevious,
-  onNext,
-  title
-}: HeaderProps) {
-  const weekDays = [
+  weekDays = [
     { day: "월", date: 24 },
     { day: "화", date: 25 },
     { day: "수", date: 26 },
@@ -27,7 +28,12 @@ export default function Header({
     { day: "금", date: 28 },
     { day: "토", date: 29 },
     { day: "일", date: 30 }
-  ]
+  ],
+  onDateSelect,
+  onPrevious,
+  onNext,
+  title
+}: HeaderProps) {
 
   return (
     <header className="bg-white px-4 pt-safe">

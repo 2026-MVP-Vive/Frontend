@@ -1,64 +1,89 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useNavigate, useParams } from "react-router-dom"
 import BottomNav from "@/components/layout/BottomNav"
+import { getFeedbacksByDate } from "@/lib/api/menteeMock"
+import type { YesterdayFeedbackResponse, Feedback } from "@/types/api"
 
-interface FeedbackItem {
-  id: number
-  subject: string
-  subjectColor: string
-  title: string
-  summary?: string
-  content: string
-}
-
-export default function Feedback() {
+export default function FeedbackPage() {
   const navigate = useNavigate()
-  const { date } = useParams()
-  const [selectedDate] = useState(date || "2025.01.26")
-
-  // Mock data - 실제로는 API로 받아올 데이터
-  const feedbacks: FeedbackItem[] = [
-    {
-      id: 1,
-      subject: "국어",
-      subjectColor: "text-red-500",
-      title: "비문학 지문 분석 3지문",
-      summary: "선지별 근거 문장 번호를 반드시 표기할 것",
-      content:
-        "지문의 주제 파악과 구조 분석은 잘하고 있습니다. 하지만 선지 분석에서 본문 근거와의 매칭이 부족합니다. 각 선지마다 해당 근거가 되는 문장 번호를 적는 습관을 들이세요. 오답들이 높은 '적절하지 않은 것' 유형에서 소거법을 활용해보세요."
-    },
-    {
-      id: 2,
-      subject: "영어",
-      subjectColor: "text-blue-500",
-      title: "영어 구문 분석 Day 11",
-      summary: "",
-      content:
-        "관계대명사 절 해석이 많이 나아졌습니다. 특히 which와 that 구분이 정확해졌어요. 다음 단계로 분사구문 파트 추가 연습이 필요합니다. 내일 학습지에 분사구문 집중 문제를 추가해둘게요."
-    },
-    {
-      id: 3,
-      subject: "수학",
-      subjectColor: "text-green-500",
-      title: "수학 확률과 통계 유형 풀이",
-      summary: "조건부확률 공식 암기 → 실전 적용 연습",
-      content:
-        "기본 확률 문제는 안정적입니다. 조건부확률에서 P(A∩B)와 P(A∩B) 혼동이 있으니 공식을 다시 정리하고 유형별 3문제씩 풀어보세요."
+  const { date: paramDate } = useParams()
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    if (paramDate) {
+      return new Date(paramDate)
     }
-  ]
+    return new Date()
+  })
+  const [feedbackData, setFeedbackData] =
+    useState<YesterdayFeedbackResponse | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
-  const overallFeedback =
-    "오늘 전체적으로 학습 시간이 잘 확보되었고, 국어와 영어 모두 꾸준한 성장이 보입니다. 수학은 조건부확률을 파트에 집중해서 이번 주 안에 마무리합시다. 내일은 영어 분사구문 학습지가 추가됩니다 💪"
+  // 날짜 형식 변환 헬퍼
+  const formatDateForDisplay = (date: Date) => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, "0")
+    const day = String(date.getDate()).padStart(2, "0")
+    return `${year}.${month}.${day}`
+  }
+
+  const formatDateForApi = (date: Date) => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, "0")
+    const day = String(date.getDate()).padStart(2, "0")
+    return `${year}-${month}-${day}`
+  }
+
+  // 피드백 데이터 로드
+  useEffect(() => {
+    const loadFeedbacks = async () => {
+      setIsLoading(true)
+      try {
+        const apiDate = formatDateForApi(selectedDate)
+        const data = await getFeedbacksByDate(apiDate)
+        setFeedbackData(data)
+      } catch (error) {
+        console.error("피드백 조회 실패:", error)
+        alert("피드백을 불러오는데 실패했습니다.")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadFeedbacks()
+  }, [selectedDate])
 
   const handlePreviousDate = () => {
-    // 실제로는 날짜 변경 로직
-    console.log("Previous date")
+    const newDate = new Date(selectedDate)
+    newDate.setDate(newDate.getDate() - 1)
+    setSelectedDate(newDate)
   }
 
   const handleNextDate = () => {
-    // 실제로는 날짜 변경 로직
-    console.log("Next date")
+    const newDate = new Date(selectedDate)
+    newDate.setDate(newDate.getDate() + 1)
+    setSelectedDate(newDate)
+  }
+
+  // 과목별 색상 매핑
+  const getSubjectColor = (subject: string) => {
+    switch (subject) {
+      case "KOREAN":
+        return "bg-red-500 text-red-600"
+      case "ENGLISH":
+        return "bg-blue-500 text-blue-600"
+      case "MATH":
+        return "bg-green-500 text-green-600"
+      default:
+        return "bg-gray-500 text-gray-600"
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-gray-500">로딩 중...</p>
+      </div>
+    )
   }
 
   return (
@@ -87,7 +112,7 @@ export default function Feedback() {
           </button>
 
           <h2 className="text-lg font-bold min-w-[200px] text-center">
-            {selectedDate} 일
+            {formatDateForDisplay(selectedDate)} 일
           </h2>
 
           <button
@@ -101,71 +126,82 @@ export default function Feedback() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto px-4 pb-20">
-        {/* Subject Feedbacks */}
-        <section className="mt-6">
-          <h3 className="text-base font-bold mb-4 flex items-center gap-2">
-            <span className="w-1 h-5 bg-blue-600 rounded"></span>
-            과목별 피드백
-          </h3>
+        {!feedbackData || feedbackData.feedbacks.length === 0 ? (
+          <div className="mt-20 text-center">
+            <p className="text-gray-500">해당 날짜의 피드백이 없습니다.</p>
+          </div>
+        ) : (
+          <>
+            {/* Subject Feedbacks */}
+            <section className="mt-6">
+              <h3 className="text-base font-bold mb-4 flex items-center gap-2">
+                <span className="w-1 h-5 bg-blue-600 rounded"></span>
+                과목별 피드백
+              </h3>
 
-          <div className="space-y-4">
-            {feedbacks.map((feedback) => (
-              <div
-                key={feedback.id}
-                className="bg-white rounded-xl p-5 shadow-sm border-l-4 border-blue-600"
-              >
-                {/* Subject and Title */}
-                <div className="flex items-center gap-3 mb-3">
-                  <span
-                    className={`text-sm px-2.5 py-1 bg-opacity-10 rounded font-medium ${
-                      feedback.subjectColor === "text-red-500"
-                        ? "bg-red-500 text-red-600"
-                        : feedback.subjectColor === "text-blue-500"
-                        ? "bg-blue-500 text-blue-600"
-                        : "bg-green-500 text-green-600"
-                    }`}
+              <div className="space-y-4">
+                {feedbackData.feedbacks.map((feedback) => (
+                  <div
+                    key={feedback.id}
+                    className="bg-white rounded-xl p-5 shadow-sm border-l-4 border-blue-600"
                   >
-                    {feedback.subject}
-                  </span>
-                  <h4 className="font-semibold text-gray-900 flex-1">
-                    {feedback.title}
-                  </h4>
-                </div>
-
-                {/* Summary (if exists) */}
-                {feedback.summary && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3 flex items-start gap-2">
-                    <span className="text-lg flex-shrink-0">⭐</span>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-yellow-900">
-                        요약: {feedback.summary}
-                      </p>
+                    {/* Subject and Title */}
+                    <div className="flex items-center gap-3 mb-3">
+                      <span
+                        className={`text-sm px-2.5 py-1 bg-opacity-10 rounded font-medium ${getSubjectColor(
+                          feedback.subject
+                        )}`}
+                      >
+                        {feedback.subjectName}
+                      </span>
+                      <h4 className="font-semibold text-gray-900 flex-1">
+                        {feedback.taskTitle}
+                      </h4>
+                      {feedback.isImportant && (
+                        <span className="text-lg">⭐</span>
+                      )}
                     </div>
+
+                    {/* Summary (if exists) */}
+                    {feedback.summary && (
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3 flex items-start gap-2">
+                        <span className="text-lg flex-shrink-0">💡</span>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-yellow-900">
+                            요약: {feedback.summary}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Content */}
+                    {feedback.content && (
+                      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                        {feedback.content}
+                      </p>
+                    )}
                   </div>
-                )}
-
-                {/* Content */}
-                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-                  {feedback.content}
-                </p>
+                ))}
               </div>
-            ))}
-          </div>
-        </section>
+            </section>
 
-        {/* Overall Feedback */}
-        <section className="mt-8 mb-6">
-          <h3 className="text-base font-bold mb-4 flex items-center gap-2">
-            <span className="w-1 h-5 bg-blue-600 rounded"></span>
-            총평
-          </h3>
+            {/* Overall Feedback */}
+            {feedbackData.overallComment && (
+              <section className="mt-8 mb-6">
+                <h3 className="text-base font-bold mb-4 flex items-center gap-2">
+                  <span className="w-1 h-5 bg-blue-600 rounded"></span>
+                  총평
+                </h3>
 
-          <div className="bg-white rounded-xl p-5 shadow-sm border-l-4 border-blue-600">
-            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-              {overallFeedback}
-            </p>
-          </div>
-        </section>
+                <div className="bg-white rounded-xl p-5 shadow-sm border-l-4 border-blue-600">
+                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                    {feedbackData.overallComment}
+                  </p>
+                </div>
+              </section>
+            )}
+          </>
+        )}
       </main>
 
       {/* Bottom Navigation */}

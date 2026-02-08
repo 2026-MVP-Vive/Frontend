@@ -1,5 +1,5 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { Home, Users, ClipboardList, User, LogOut } from 'lucide-react'
+import { Users, User, LogOut } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 
 interface NavItem {
@@ -20,10 +20,7 @@ export default function MentorLayout() {
   const { logout, username } = useAuth()
 
   const navItems: NavItem[] = [
-    { icon: <Home className="w-5 h-5" />, label: '홈', path: '/mentor/students' },
-    { icon: <Users className="w-5 h-5" />, label: '멘티 관리', path: '/mentor/students' },
-    { icon: <ClipboardList className="w-5 h-5" />, label: '과제 관리', path: '/mentor/tasks' },
-    { icon: <User className="w-5 h-5" />, label: '마이페이지', path: '/mentor/mypage' }
+    { icon: <Users className="w-5 h-5" />, label: '멘티 관리', path: '/mentor/students' }
   ]
 
   const isActive = (path: string) => {

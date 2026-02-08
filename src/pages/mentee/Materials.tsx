@@ -1,6 +1,9 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Paperclip } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 import BottomNav from "@/components/layout/BottomNav"
+import { getSolutions } from "@/lib/api"
+import type { Solution, Subject } from "@/types/api"
 
 interface ShortcutCard {
   id: number
@@ -10,25 +13,20 @@ interface ShortcutCard {
   path: string
 }
 
-interface Solution {
-  id: number
-  subject: string
-  subjectColor: string
-  title: string
-  hasFile: boolean
-}
-
-type SubjectFilter = "all" | "korean" | "english" | "math"
+type SubjectFilter = "all" | "KOREAN" | "ENGLISH" | "MATH"
 
 export default function Materials() {
+  const navigate = useNavigate()
   const [selectedSubject, setSelectedSubject] = useState<SubjectFilter>("all")
+  const [solutions, setSolutions] = useState<Solution[]>([])
+  const [isLoading, setIsLoading] = useState(false)
 
   const shortcuts: ShortcutCard[] = [
     {
       id: 1,
       icon: "📅",
       title: "월간계획표",
-      description: "1월 학습 일정 확인",
+      description: "학습 일정 확인",
       path: "/mentee/monthly-plan"
     },
     {
@@ -40,60 +38,52 @@ export default function Materials() {
     }
   ]
 
-  const allSolutions: Solution[] = [
-    {
-      id: 1,
-      subject: "국어",
-      subjectColor: "text-red-500",
-      title: "독해력 강화",
-      hasFile: true
-    },
-    {
-      id: 2,
-      subject: "국어",
-      subjectColor: "text-red-500",
-      title: "문학 감상법 정리",
-      hasFile: true
-    },
-    {
-      id: 3,
-      subject: "영어",
-      subjectColor: "text-blue-500",
-      title: "구문 독해",
-      hasFile: true
-    },
-    {
-      id: 4,
-      subject: "수학",
-      subjectColor: "text-green-500",
-      title: "미적분 보완",
-      hasFile: true
-    },
-    {
-      id: 5,
-      subject: "수학",
-      subjectColor: "text-green-500",
-      title: "조건부확률 공식 정리",
-      hasFile: true
+  // 솔루션 목록 조회
+  const loadSolutions = async (subject?: Subject) => {
+    setIsLoading(true)
+    try {
+      const data = await getSolutions(subject)
+      setSolutions(data.solutions)
+    } catch (error) {
+      console.error('솔루션 조회 실패:', error)
+    } finally {
+      setIsLoading(false)
     }
-  ]
+  }
 
-  const filteredSolutions = allSolutions.filter((solution) => {
-    if (selectedSubject === "all") return true
-    if (selectedSubject === "korean") return solution.subject === "국어"
-    if (selectedSubject === "english") return solution.subject === "영어"
-    if (selectedSubject === "math") return solution.subject === "수학"
-    return true
-  })
+  // 과목 필터 변경 시 데이터 재조회
+  useEffect(() => {
+    if (selectedSubject === "all") {
+      loadSolutions()
+    } else {
+      loadSolutions(selectedSubject as Subject)
+    }
+  }, [selectedSubject])
 
-  const handleDownload = (solution: Solution) => {
-    console.log("Download material for:", solution.title)
-    // 실제 다운로드 로직
+  // 과목별 색상 매핑
+  const getSubjectColor = (subject: Subject) => {
+    switch (subject) {
+      case 'KOREAN':
+        return 'bg-red-500 text-red-600'
+      case 'ENGLISH':
+        return 'bg-blue-500 text-blue-600'
+      case 'MATH':
+        return 'bg-green-500 text-green-600'
+      default:
+        return 'bg-gray-500 text-gray-600'
+    }
+  }
+
+  const handleDownload = (downloadUrl: string, fileName: string) => {
+    // 실제 파일 다운로드
+    const link = document.createElement('a')
+    link.href = `http://115.68.232.25:8080${downloadUrl}`
+    link.download = fileName
+    link.click()
   }
 
   const handleShortcutClick = (path: string) => {
-    console.log("Navigate to:", path)
-    // 실제로는 페이지 이동 또는 기능 실행
+    navigate(path)
   }
 
   return (
@@ -155,9 +145,9 @@ export default function Materials() {
               전체
             </button>
             <button
-              onClick={() => setSelectedSubject("korean")}
+              onClick={() => setSelectedSubject("KOREAN")}
               className={`px-5 py-2.5 rounded-full font-medium whitespace-nowrap transition-all ${
-                selectedSubject === "korean"
+                selectedSubject === "KOREAN"
                   ? "bg-blue-600 text-white"
                   : "bg-white text-gray-700 border border-gray-300 hover:border-blue-300"
               }`}
@@ -165,9 +155,9 @@ export default function Materials() {
               국어
             </button>
             <button
-              onClick={() => setSelectedSubject("english")}
+              onClick={() => setSelectedSubject("ENGLISH")}
               className={`px-5 py-2.5 rounded-full font-medium whitespace-nowrap transition-all ${
-                selectedSubject === "english"
+                selectedSubject === "ENGLISH"
                   ? "bg-blue-600 text-white"
                   : "bg-white text-gray-700 border border-gray-300 hover:border-blue-300"
               }`}
@@ -175,9 +165,9 @@ export default function Materials() {
               영어
             </button>
             <button
-              onClick={() => setSelectedSubject("math")}
+              onClick={() => setSelectedSubject("MATH")}
               className={`px-5 py-2.5 rounded-full font-medium whitespace-nowrap transition-all ${
-                selectedSubject === "math"
+                selectedSubject === "MATH"
                   ? "bg-blue-600 text-white"
                   : "bg-white text-gray-700 border border-gray-300 hover:border-blue-300"
               }`}
@@ -187,44 +177,44 @@ export default function Materials() {
           </div>
 
           {/* Solutions List */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100">
-            {filteredSolutions.map((solution) => (
-              <div
-                key={solution.id}
-                className="p-4 flex items-center gap-4 hover:bg-gray-50 transition-colors"
-              >
-                <span
-                  className={`text-sm px-2.5 py-1 bg-opacity-10 rounded font-medium flex-shrink-0 ${
-                    solution.subjectColor === "text-red-500"
-                      ? "bg-red-500 text-red-600"
-                      : solution.subjectColor === "text-blue-500"
-                      ? "bg-blue-500 text-blue-600"
-                      : "bg-green-500 text-green-600"
-                  }`}
-                >
-                  {solution.subject}
-                </span>
-
-                <h3 className="font-semibold text-gray-900 flex-1">
-                  {solution.title}
-                </h3>
-
-                {solution.hasFile && (
-                  <button
-                    onClick={() => handleDownload(solution)}
-                    className="flex items-center gap-1.5 text-blue-600 hover:text-blue-700 transition-colors"
-                  >
-                    <Paperclip className="w-4 h-4" />
-                    <span className="text-sm font-medium">자료</span>
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {filteredSolutions.length === 0 && (
+          {isLoading ? (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+              <p className="text-gray-500">로딩 중...</p>
+            </div>
+          ) : solutions.length === 0 ? (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
               <p className="text-gray-500">해당 과목의 자료가 없습니다</p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100">
+              {solutions.map((solution) => (
+                <div
+                  key={solution.id}
+                  className="p-4 flex items-center gap-4 hover:bg-gray-50 transition-colors"
+                >
+                  <span
+                    className={`text-sm px-2.5 py-1 bg-opacity-10 rounded font-medium flex-shrink-0 ${getSubjectColor(solution.subject)}`}
+                  >
+                    {solution.subjectName}
+                  </span>
+
+                  <h3 className="font-semibold text-gray-900 flex-1">
+                    {solution.title}
+                  </h3>
+
+                  {solution.materials.length > 0 ? (
+                    <button
+                      onClick={() => handleDownload(solution.materials[0].downloadUrl, solution.materials[0].fileName)}
+                      className="flex items-center gap-1.5 text-blue-600 hover:text-blue-700 transition-colors"
+                    >
+                      <Paperclip className="w-4 h-4" />
+                      <span className="text-sm font-medium">자료</span>
+                    </button>
+                  ) : (
+                    <span className="text-sm text-gray-400">자료 없음</span>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </section>

@@ -12,6 +12,7 @@ import Login from './pages/Login'
 import Home from './pages/Home'
 import MentiMain from './pages/MentiMain'
 import TaskDetail from './pages/mentee/TaskDetail'
+import TaskNew from './pages/mentee/TaskNew'
 import Feedback from './pages/mentee/Feedback'
 import Materials from './pages/mentee/Materials'
 import MenteeList from './pages/mentor/MenteeList'
@@ -45,7 +46,9 @@ function App() {
             </ProtectedRoute>
           }
         >
+          <Route index element={<MentiMain />} />
           <Route path="planner" element={<MentiMain />} />
+          <Route path="task/new" element={<TaskNew />} />
           <Route path="task/:id" element={<TaskDetail />} />
           <Route path="feedback/:date" element={<Feedback />} />
           <Route path="resources" element={<Materials />} />
@@ -60,6 +63,7 @@ function App() {
             </ProtectedRoute>
           }
         >
+          <Route index element={<Navigate to="/mentor/students" replace />} />
           <Route path="students" element={<MenteeList />} />
           <Route path="students/:id" element={<DetailManage />} />
           <Route path="students/:id/tasks/new" element={<TaskRegister />} />
