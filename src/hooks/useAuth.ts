@@ -6,8 +6,7 @@ import {
   isMentor,
   isMentee,
   isAuthenticated,
-  logout as authLogout,
-  type UserRole
+  logout as authLogout
 } from '@/utils/auth'
 
 /**
@@ -16,7 +15,7 @@ import {
 export function useAuth() {
   const navigate = useNavigate()
 
-  const role: UserRole = getUserRole()
+  const role = getUserRole()
   const token = getAuthToken()
   const username = getUsername()
   const authenticated = isAuthenticated()

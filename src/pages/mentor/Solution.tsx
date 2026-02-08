@@ -57,15 +57,6 @@ export default function Solution() {
     return colors[subject] || "bg-gray-100 text-gray-700";
   };
 
-  const getSubjectName = (subject: string) => {
-    const names: Record<string, string> = {
-      KOREAN: "국어",
-      ENGLISH: "영어",
-      MATH: "수학",
-    };
-    return names[subject] || subject;
-  };
-
   const handleAdd = () => {
     setShowAddForm(true);
     setEditingId(null);

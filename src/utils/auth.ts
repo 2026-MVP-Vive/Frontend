@@ -1,5 +1,7 @@
 import type { User, UserRole } from '@/types/api'
 
+export type { UserRole }
+
 /**
  * sessionStorage에서 현재 사용자 역할 조회
  */

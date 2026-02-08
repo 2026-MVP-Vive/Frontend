@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { Minus, Video } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,13 +9,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import { useNavigate } from "react-router-dom";
 import {
   getTasks,
   getYesterdayFeedback,
-  createComment,
   completePlanner,
   createZoomMeeting,
 } from "@/lib/api/menteeMock";
@@ -28,7 +27,6 @@ export default function MentiMain() {
   const [selectedDate, setSelectedDate] = useState(new Date().getDate());
   const [tasks, setTasks] = useState<Task[]>([]);
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
-  const [comment, setComment] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isPlannerCompleted, setIsPlannerCompleted] = useState(false);
   const [checkedTasks, setCheckedTasks] = useState<Set<number>>(new Set());
@@ -113,23 +111,6 @@ export default function MentiMain() {
   useEffect(() => {
     loadYesterdayFeedback();
   }, []);
-
-  // 코멘트 등록
-  const handleSubmitComment = async () => {
-    if (!comment.trim()) return;
-
-    try {
-      await createComment({
-        content: comment,
-        date: formatDate(currentDate),
-      });
-      setComment("");
-      alert("코멘트가 등록되었습니다!");
-    } catch (error) {
-      console.error("코멘트 등록 실패:", error);
-      alert("코멘트 등록에 실패했습니다.");
-    }
-  };
 
   // 할 일 로컬 체크 토글 (API 호출 없음)
   const handleToggleTask = (taskId: number) => {

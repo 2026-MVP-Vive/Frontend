@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useNavigate, useParams } from "react-router-dom"
 import BottomNav from "@/components/layout/BottomNav"
 import { getFeedbacksByDate } from "@/lib/api/menteeMock"
-import type { YesterdayFeedbackResponse, Feedback } from "@/types/api"
+import type { YesterdayFeedbackResponse } from "@/types/api"
 
 export default function FeedbackPage() {
   const navigate = useNavigate()

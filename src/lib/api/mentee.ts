@@ -5,7 +5,6 @@ import type {
   CreateTaskRequest,
   Task,
   UpdateStudyTimeRequest,
-  ToggleTaskCompletionRequest,
   YesterdayFeedbackResponse,
   CreateCommentRequest,
   Comment,
@@ -90,11 +89,9 @@ export const updateStudyTime = async (
 /**
  * 할 일 완료 토글
  * @param taskId - 할 일 ID
- * @param isCompleted - 완료 여부
  */
 export const toggleTaskCompletion = async (
-  taskId: number,
-  isCompleted: boolean
+  taskId: number
 ): Promise<{ id: number; isCompleted: boolean }> => {
   const response = await apiClient.patch<
     ApiResponse<{ id: number; isCompleted: boolean }>

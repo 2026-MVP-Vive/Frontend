@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -16,11 +15,11 @@ export default function Home() {
   }
 
   // 역할에 따라 리다이렉트
-  if (role === 'mentor') {
+  if (role === 'MENTOR') {
     return <Navigate to="/mentor/students" replace />
   }
 
-  if (role === 'mentee') {
+  if (role === 'MENTEE') {
     return <Navigate to="/mentee/planner" replace />
   }
 

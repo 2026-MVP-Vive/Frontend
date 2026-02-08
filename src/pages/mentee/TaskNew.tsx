@@ -49,19 +49,6 @@ export default function TaskNew() {
     }
   }
 
-  const getSubjectName = (subjectCode: string) => {
-    switch (subjectCode) {
-      case 'KOREAN':
-        return '국어'
-      case 'ENGLISH':
-        return '영어'
-      case 'MATH':
-        return '수학'
-      default:
-        return '선택 안함'
-    }
-  }
-
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* Header */}

@@ -1,4 +1,4 @@
-import type { StudentsResponse, MentorTasksResponse } from '@/types/api'
+import type { StudentsResponse, MentorTasksResponse, Subject } from '@/types/api'
 
 // 멘티 목록 Mock 데이터
 export const mockStudents: StudentsResponse = {
