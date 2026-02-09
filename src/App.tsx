@@ -1,4 +1,8 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
+import { getToken, onMessage } from 'firebase/messaging'
+import { messaging, VAPID_KEY } from './lib/firebase'
+import { sendFcmToken } from './lib/api/fcm'
 
 // Layouts
 import MentorLayout from './layouts/MentorLayout'
@@ -20,9 +24,111 @@ import DetailManage from './pages/mentor/DetailManage'
 import TaskRegister from './pages/mentor/TaskRegister'
 import Solution from './pages/mentor/Solution'
 
-function App() {
+function AppContent() {
+  const location = useLocation();
+
+  // FCM 초기화 및 토큰 전송 (멘토만)
+  useEffect(() => {
+    const initFCM = async () => {
+      // 로그인 페이지에서는 FCM 초기화 하지 않음
+      if (location.pathname === '/login') {
+        return;
+      }
+
+      // 로그인 상태 및 역할 확인
+      const authToken = sessionStorage.getItem('authToken');
+      const userRole = sessionStorage.getItem('userRole');
+
+      // 멘토가 아니거나 로그인하지 않은 경우 건너뛰기
+      if (!authToken || !messaging || userRole !== 'MENTOR') {
+        console.log('FCM 초기화 건너뛰기 (멘토만 허용):', { authToken: !!authToken, messaging: !!messaging, userRole });
+        return;
+      }
+
+      // 이미 토큰을 전송한 경우 건너뛰기 (중복 방지)
+      const fcmTokenSent = sessionStorage.getItem('fcmTokenSent');
+      if (fcmTokenSent === 'true') {
+        console.log('FCM 토큰 이미 전송됨, 건너뛰기');
+        return;
+      }
+
+      try {
+        // Firebase Messaging Service Worker 등록
+        const registration = await navigator.serviceWorker.register(
+          '/firebase-messaging-sw.js',
+          { scope: '/firebase-cloud-messaging-push-scope' }
+        );
+        console.log('Firebase Service Worker 등록 완료:', registration);
+
+        // Service Worker가 활성화될 때까지 대기
+        await navigator.serviceWorker.ready;
+
+        // 알림 권한 요청
+        const permission = await Notification.requestPermission();
+
+        if (permission === 'granted') {
+          console.log('알림 권한이 허용되었습니다.');
+
+          // FCM 토큰 가져오기
+          const currentToken = await getToken(messaging, {
+            vapidKey: VAPID_KEY,
+            serviceWorkerRegistration: registration
+          });
+
+          if (currentToken) {
+            console.log('FCM 토큰:', currentToken);
+
+            // 서버로 토큰 전송
+            await sendFcmToken(currentToken);
+            console.log('FCM 토큰이 서버로 전송되었습니다.');
+
+            // 토큰 전송 완료 플래그 저장
+            sessionStorage.setItem('fcmTokenSent', 'true');
+          } else {
+            console.log('FCM 토큰을 가져올 수 없습니다.');
+          }
+        } else {
+          console.log('알림 권한이 거부되었습니다.');
+        }
+      } catch (error) {
+        console.error('FCM 초기화 오류:', error);
+      }
+    };
+
+    // 포그라운드 메시지 핸들러 (멘티만)
+    const userRole = sessionStorage.getItem('userRole');
+    if (messaging && userRole === 'MENTEE') {
+      const unsubscribe = onMessage(messaging, (payload) => {
+        console.log('포그라운드 메시지 수신:', payload);
+
+        // 알림 표시
+        if (payload.notification) {
+          const notificationTitle = payload.notification.title || '새로운 알림';
+          const notificationOptions = {
+            body: payload.notification.body || '',
+            icon: '/favicon.ico'
+          };
+
+          // 알림 권한이 허용된 경우에만 표시
+          if (Notification.permission === 'granted') {
+            new Notification(notificationTitle, notificationOptions);
+          }
+        }
+      });
+
+      return () => {
+        unsubscribe();
+      };
+    }
+
+    // 멘토인 경우에만 FCM 초기화
+    if (userRole === 'MENTOR') {
+      initFCM();
+    }
+  }, [location.pathname]);
+
   return (
-    <BrowserRouter>
+    <>
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<Login />} />
@@ -73,6 +179,14 @@ function App() {
         {/* Default redirect */}
         <Route path="/" element={<Navigate to="/home" replace />} />
       </Routes>
+    </>
+  )
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
     </BrowserRouter>
   )
 }

@@ -4,6 +4,11 @@
 
 각 화면의 API 연동 작업 시 다음 단계를 따릅니다:
 
+## 멘티/멘토 계정 정보
+
+멘티: mentee01 / password123
+멘토: mentor01 / password123
+
 ## 1️⃣ 기획 문서 분석
 
 **순서**: MVP_PLAN.md → wire-frame.html → API_DETAIL_SPEC.md

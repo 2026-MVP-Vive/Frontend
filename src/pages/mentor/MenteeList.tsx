@@ -2,16 +2,15 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, CheckCircle2, Clock, AlertCircle, Bell } from "lucide-react";
 import BottomNav from "@/components/layout/BottomNav";
-import { getStudents, confirmZoomMeeting } from "@/lib/api/mentor";
-import { getZoomMeetings } from "@/lib/api/mentee";
-import type { Student, ZoomMeeting } from "@/types/api";
+import { getStudents, getNotifications, confirmZoomMeeting } from "@/lib/api/mentor";
+import type { Student, Notification } from "@/types/api";
 
 export default function MenteeList() {
   const navigate = useNavigate();
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [zoomMeetings, setZoomMeetings] = useState<ZoomMeeting[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
   // 멘티 목록 로드
@@ -32,37 +31,39 @@ export default function MenteeList() {
     loadStudents();
   }, []);
 
-  // Zoom 미팅 목록 로드 (멘토용)
-  const loadZoomMeetings = async () => {
+  // 알림 목록 로드 (멘토용)
+  const loadNotifications = async () => {
     try {
-      const data = await getZoomMeetings("PENDING"); // PENDING 상태만 조회
-      setZoomMeetings(data.meetings);
-      setUnreadCount(data.meetings.length);
+      const data = await getNotifications(true); // 미확인만 조회
+      setNotifications(data.notifications);
+      setUnreadCount(data.unreadCount);
     } catch (error) {
-      console.error("Zoom 미팅 조회 실패:", error);
+      console.error("알림 조회 실패:", error);
     }
   };
 
-  // Zoom 미팅 폴링 (30초 간격)
+  // 알림 폴링 (30초 간격)
   useEffect(() => {
-    loadZoomMeetings(); // 초기 로드
+    loadNotifications(); // 초기 로드
 
     const interval = setInterval(() => {
-      loadZoomMeetings();
+      loadNotifications();
     }, 30000); // 30초
 
     return () => clearInterval(interval);
   }, []);
 
-  // Zoom 미팅 확인
-  const handleConfirmZoom = async (meetingId: number) => {
+  // 알림 확인 (Zoom 미팅 등)
+  const handleConfirmNotification = async (notification: Notification) => {
     try {
-      await confirmZoomMeeting(meetingId);
-      alert("Zoom 미팅이 확인되었습니다.");
-      loadZoomMeetings(); // 목록 새로고침
+      if (notification.type === "ZOOM_REQUEST" && notification.relatedId) {
+        await confirmZoomMeeting(notification.relatedId);
+        alert("Zoom 미팅이 확인되었습니다.");
+        loadNotifications(); // 목록 새로고침
+      }
     } catch (error) {
-      console.error("Zoom 미팅 확인 실패:", error);
-      alert("Zoom 미팅 확인에 실패했습니다.");
+      console.error("알림 처리 실패:", error);
+      alert("알림 처리에 실패했습니다.");
     }
   };
 
@@ -137,39 +138,41 @@ export default function MenteeList() {
                   <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                     {/* 헤더 */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-                      <h3 className="font-semibold text-gray-900">Zoom 미팅 신청</h3>
+                      <h3 className="font-semibold text-gray-900">알림</h3>
                       <span className="text-sm text-gray-500">
                         {unreadCount}건
                       </span>
                     </div>
 
-                    {/* Zoom 미팅 목록 */}
+                    {/* 알림 목록 */}
                     <div className="max-h-96 overflow-y-auto">
-                      {zoomMeetings.length > 0 ? (
+                      {notifications.length > 0 ? (
                         <div className="divide-y divide-gray-100">
-                          {zoomMeetings.map((meeting) => (
+                          {notifications.map((notification) => (
                             <div
-                              key={meeting.id}
+                              key={notification.id}
                               className="px-4 py-3 hover:bg-gray-50 bg-blue-50"
                             >
                               <div className="flex items-start justify-between">
                                 <div className="flex-1">
                                   <p className="text-sm font-medium text-gray-900">
-                                    Zoom 미팅 신청
+                                    {notification.title}
                                   </p>
                                   <p className="text-xs text-gray-500 mt-1">
-                                    {meeting.studentName} — {meeting.preferredDate} {meeting.preferredTime}
+                                    {notification.studentName} — {notification.message}
                                   </p>
                                   <p className="text-xs text-gray-400 mt-1">
-                                    {new Date(meeting.createdAt).toLocaleString("ko-KR")}
+                                    {new Date(notification.createdAt).toLocaleString("ko-KR")}
                                   </p>
                                 </div>
-                                <button
-                                  onClick={() => handleConfirmZoom(meeting.id)}
-                                  className="ml-2 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
-                                >
-                                  확인
-                                </button>
+                                {notification.type === "ZOOM_REQUEST" && (
+                                  <button
+                                    onClick={() => handleConfirmNotification(notification)}
+                                    className="ml-2 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                                  >
+                                    확인
+                                  </button>
+                                )}
                               </div>
                             </div>
                           ))}
@@ -177,16 +180,16 @@ export default function MenteeList() {
                       ) : (
                         <div className="px-4 py-8 text-center text-gray-500">
                           <Bell className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                          <p className="text-sm">새로운 Zoom 신청이 없습니다</p>
+                          <p className="text-sm">새로운 알림이 없습니다</p>
                         </div>
                       )}
                     </div>
 
                     {/* 하단 버튼 */}
-                    {zoomMeetings.length > 0 && (
+                    {notifications.length > 0 && (
                       <div className="border-t border-gray-200 px-4 py-3">
                         <button className="text-sm text-blue-600 hover:text-blue-700 font-medium w-full text-center">
-                          모든 신청 보기
+                          모든 알림 보기
                         </button>
                       </div>
                     )}
