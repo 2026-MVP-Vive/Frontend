@@ -196,16 +196,15 @@ export default function DetailManage() {
         </div>
       </div>
 
-      {/* 플래너 마감 상태 (Mock - 항상 표시) */}
-      <div className="mb-4 flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-        <span className="text-lg">✅</span>
-        <span className="text-sm font-semibold text-green-700">
-          멘티가 플래너를 마감했습니다
-        </span>
-        <span className="text-xs text-gray-600 ml-auto">
-          마감 시각: 22:15
-        </span>
-      </div>
+      {/* 플래너 마감 상태 */}
+      {data.completed && (
+        <div className="mb-4 flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+          <span className="text-lg">✅</span>
+          <span className="text-sm font-semibold text-green-700">
+            멘티가 플래너 마감 요청을 했습니다
+          </span>
+        </div>
+      )}
 
       {/* 2-패널 레이아웃 */}
       <div className="grid grid-cols-2 gap-6">
@@ -259,14 +258,8 @@ export default function DetailManage() {
                       {task.goal?.title || "—"}
                     </td>
                     <td className="py-3">
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full font-medium ${
-                          task.isMentorAssigned
-                            ? "bg-purple-100 text-purple-700"
-                            : "bg-gray-100 text-gray-700"
-                        }`}
-                      >
-                        {task.isMentorAssigned ? "멘토" : "멘티"}
+                      <span className="text-xs px-2 py-1 rounded-full font-medium bg-gray-100 text-gray-700">
+                        멘티
                       </span>
                     </td>
                     <td className="py-3 text-center">
@@ -276,12 +269,12 @@ export default function DetailManage() {
                           handleConfirmToggle(task.id);
                         }}
                         className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${
-                          task.isMentorConfirmed
+                          task.checked
                             ? "bg-blue-600 border-blue-600 text-white"
                             : "border-gray-300 hover:border-blue-400"
                         }`}
                       >
-                        {task.isMentorConfirmed && (
+                        {task.checked && (
                           <span className="text-xs">✓</span>
                         )}
                       </button>

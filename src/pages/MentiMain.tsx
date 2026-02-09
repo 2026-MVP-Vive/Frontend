@@ -85,6 +85,16 @@ export default function MentiMain() {
       const dateStr = formatDate(currentDate);
       const data = await getTasks(dateStr);
       setTasks(data.tasks);
+
+      // completed가 true인 task들을 자동으로 체크
+      const completedTaskIds = data.tasks
+        .filter(task => task.completed)
+        .map(task => task.id);
+      setCheckedTasks(new Set(completedTaskIds));
+
+      // 하나라도 completed: true이면 플래너 마감된 것으로 간주
+      const hasCompletedTask = data.tasks.some(task => task.completed);
+      setIsPlannerCompleted(hasCompletedTask);
     } catch (error) {
       console.error("할 일 목록 조회 실패:", error);
     } finally {
@@ -134,7 +144,8 @@ export default function MentiMain() {
     }
 
     try {
-      await completePlanner(formatDate(currentDate));
+      const taskIds = Array.from(checkedTasks);
+      await completePlanner(formatDate(currentDate), taskIds);
       setIsPlannerCompleted(true);
       alert("플래너가 마감되었습니다!");
     } catch (error) {
@@ -320,7 +331,7 @@ export default function MentiMain() {
                           <h3 className="font-semibold text-gray-900">
                             {task.title}
                           </h3>
-                          {task.isMentorAssigned && (
+                          {task.mentorAssigned && (
                             <span className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-600 rounded">
                               멘토
                             </span>
@@ -377,7 +388,9 @@ export default function MentiMain() {
               : "플래너 마감 / 피드백 요청"}
           </Button>
           <p className="text-center text-xs text-gray-500 mt-2">
-            {checkedTasks.size === 0
+            {isPlannerCompleted
+              ? "플래너가 마감되었습니다. 멘토의 피드백을 기다려주세요."
+              : checkedTasks.size === 0
               ? "최소 1개 이상의 할 일을 완료해주세요."
               : "할 일을 완료한 후 눌러주세요. 멘토에게 피드백 요청이 전달됩니다."}
           </p>

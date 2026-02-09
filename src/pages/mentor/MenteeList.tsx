@@ -2,14 +2,17 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, CheckCircle2, Clock, AlertCircle, Bell } from "lucide-react";
 import BottomNav from "@/components/layout/BottomNav";
-import { getStudents } from "@/lib/api/mentor";
-import type { Student } from "@/types/api";
+import { getStudents, confirmZoomMeeting } from "@/lib/api/mentor";
+import { getZoomMeetings } from "@/lib/api/mentee";
+import type { Student, ZoomMeeting } from "@/types/api";
 
 export default function MenteeList() {
   const navigate = useNavigate();
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [zoomMeetings, setZoomMeetings] = useState<ZoomMeeting[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // 멘티 목록 로드
   useEffect(() => {
@@ -28,6 +31,40 @@ export default function MenteeList() {
 
     loadStudents();
   }, []);
+
+  // Zoom 미팅 목록 로드 (멘토용)
+  const loadZoomMeetings = async () => {
+    try {
+      const data = await getZoomMeetings("PENDING"); // PENDING 상태만 조회
+      setZoomMeetings(data.meetings);
+      setUnreadCount(data.meetings.length);
+    } catch (error) {
+      console.error("Zoom 미팅 조회 실패:", error);
+    }
+  };
+
+  // Zoom 미팅 폴링 (30초 간격)
+  useEffect(() => {
+    loadZoomMeetings(); // 초기 로드
+
+    const interval = setInterval(() => {
+      loadZoomMeetings();
+    }, 30000); // 30초
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Zoom 미팅 확인
+  const handleConfirmZoom = async (meetingId: number) => {
+    try {
+      await confirmZoomMeeting(meetingId);
+      alert("Zoom 미팅이 확인되었습니다.");
+      loadZoomMeetings(); // 목록 새로고침
+    } catch (error) {
+      console.error("Zoom 미팅 확인 실패:", error);
+      alert("Zoom 미팅 확인에 실패했습니다.");
+    }
+  };
 
   // 날짜 포맷 (YYYY-MM-DD → MM.DD)
   const formatDate = (dateString: string | null) => {
@@ -49,8 +86,6 @@ export default function MenteeList() {
     return `${year}.${month}.${day} ${weekday}요일`;
   };
 
-  // 알림 개수 (Mock - 실제로는 API에서 가져와야 함)
-  const notificationCount = 3;
 
   if (isLoading) {
     return (
@@ -92,7 +127,7 @@ export default function MenteeList() {
                   className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <Bell className="w-5 h-5 text-gray-700" />
-                  {notificationCount > 0 && (
+                  {unreadCount > 0 && (
                     <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                   )}
                 </button>
@@ -102,63 +137,56 @@ export default function MenteeList() {
                   <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                     {/* 헤더 */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-                      <h3 className="font-semibold text-gray-900">알림</h3>
+                      <h3 className="font-semibold text-gray-900">Zoom 미팅 신청</h3>
                       <span className="text-sm text-gray-500">
-                        {notificationCount}건
+                        {unreadCount}건
                       </span>
                     </div>
 
-                    {/* 알림 목록 */}
+                    {/* Zoom 미팅 목록 */}
                     <div className="max-h-96 overflow-y-auto">
-                      {notificationCount > 0 ? (
+                      {zoomMeetings.length > 0 ? (
                         <div className="divide-y divide-gray-100">
-                          <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
-                            <p className="text-sm font-medium text-gray-900">
-                              민유진 학생의 과제 제출
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              "React 기초 학습" 과제가 제출되었습니다.
-                            </p>
-                            <p className="text-xs text-gray-400 mt-1">
-                              10분 전
-                            </p>
-                          </div>
-                          <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
-                            <p className="text-sm font-medium text-gray-900">
-                              김철수 학생의 피드백 요청
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              어제 과제에 대한 피드백을 기다리고 있습니다.
-                            </p>
-                            <p className="text-xs text-gray-400 mt-1">
-                              1시간 전
-                            </p>
-                          </div>
-                          <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
-                            <p className="text-sm font-medium text-gray-900">
-                              이영희 학생의 질문
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              "TypeScript 타입" 과제에 질문이 등록되었습니다.
-                            </p>
-                            <p className="text-xs text-gray-400 mt-1">
-                              2시간 전
-                            </p>
-                          </div>
+                          {zoomMeetings.map((meeting) => (
+                            <div
+                              key={meeting.id}
+                              className="px-4 py-3 hover:bg-gray-50 bg-blue-50"
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium text-gray-900">
+                                    Zoom 미팅 신청
+                                  </p>
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    {meeting.studentName} — {meeting.preferredDate} {meeting.preferredTime}
+                                  </p>
+                                  <p className="text-xs text-gray-400 mt-1">
+                                    {new Date(meeting.createdAt).toLocaleString("ko-KR")}
+                                  </p>
+                                </div>
+                                <button
+                                  onClick={() => handleConfirmZoom(meeting.id)}
+                                  className="ml-2 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                                >
+                                  확인
+                                </button>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       ) : (
                         <div className="px-4 py-8 text-center text-gray-500">
                           <Bell className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                          <p className="text-sm">새로운 알림이 없습니다</p>
+                          <p className="text-sm">새로운 Zoom 신청이 없습니다</p>
                         </div>
                       )}
                     </div>
 
                     {/* 하단 버튼 */}
-                    {notificationCount > 0 && (
+                    {zoomMeetings.length > 0 && (
                       <div className="border-t border-gray-200 px-4 py-3">
                         <button className="text-sm text-blue-600 hover:text-blue-700 font-medium w-full text-center">
-                          모든 알림 보기
+                          모든 신청 보기
                         </button>
                       </div>
                     )}

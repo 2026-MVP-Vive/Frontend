@@ -11,6 +11,7 @@ import type {
   CompletePlannerResponse,
   CreateZoomMeetingRequest,
   ZoomMeeting,
+  ZoomMeetingsResponse,
 } from '@/types/api'
 
 /**
@@ -143,13 +144,15 @@ export const createComment = async (
 /**
  * 플래너 마감/피드백 요청
  * @param date - 마감할 날짜 (YYYY-MM-DD)
+ * @param tasks - 선택된 할일 ID 목록
  */
 export const completePlanner = async (
-  date: string
+  date: string,
+  tasks: number[]
 ): Promise<CompletePlannerResponse> => {
   const response = await apiClient.post<
     ApiResponse<CompletePlannerResponse>
-  >(`/mentee/planner/${date}/complete`)
+  >(`/mentee/planner/${date}/complete`, { tasks })
 
   if (!response.data.success || !response.data.data) {
     throw new Error(response.data.message || '플래너 마감에 실패했습니다.')
@@ -172,6 +175,27 @@ export const createZoomMeeting = async (
   if (!response.data.success || !response.data.data) {
     throw new Error(
       response.data.message || 'Zoom 미팅 신청에 실패했습니다.'
+    )
+  }
+
+  return response.data.data
+}
+
+/**
+ * Zoom 미팅 신청 내역 조회
+ * @param status - 상태 필터 (PENDING/CONFIRMED/CANCELLED, 선택)
+ */
+export const getZoomMeetings = async (
+  status?: string
+): Promise<ZoomMeetingsResponse> => {
+  const response = await apiClient.get<ApiResponse<ZoomMeetingsResponse>>(
+    '/mentee/zoom-meetings',
+    status ? { params: { status } } : undefined
+  )
+
+  if (!response.data.success || !response.data.data) {
+    throw new Error(
+      response.data.message || 'Zoom 미팅 내역 조회에 실패했습니다.'
     )
   }
 

@@ -57,12 +57,14 @@ export interface Task {
   goalId: number | null
   goalTitle: string | null
   studyTime: number | null
-  isCompleted: boolean
-  isMentorAssigned: boolean
-  isMentorConfirmed: boolean
+  completed: boolean
+  mentorAssigned: boolean
+  mentorConfirmed: boolean
   hasSubmission: boolean
   hasFeedback: boolean
   materialCount: number
+  uploadRequired: boolean
+  menteeCompleted: boolean
   date?: string
 }
 
@@ -186,6 +188,33 @@ export interface ZoomMeeting {
   status: 'PENDING' | 'CONFIRMED' | 'CANCELLED'
   createdAt: string
   confirmedAt?: string
+  studentName?: string
+}
+
+// Zoom 미팅 목록 조회 응답
+export interface ZoomMeetingsResponse {
+  meetings: ZoomMeeting[]
+}
+
+// 알림 타입
+export type NotificationType = 'ZOOM_REQUEST' | 'PLANNER_COMPLETED' | 'TASK_SUBMITTED'
+
+// 알림
+export interface Notification {
+  id: number
+  type: NotificationType
+  title: string
+  message: string
+  relatedId: number | null
+  isRead: boolean
+  createdAt: string
+  studentName: string
+}
+
+// 알림 목록 조회 응답
+export interface NotificationsResponse {
+  notifications: Notification[]
+  unreadCount: number
 }
 
 // === 학습자료 API 타입 ===
@@ -270,8 +299,10 @@ export interface MentorTasksResponse {
   studentId: number
   studentName: string
   date: string
+  completed: boolean
   tasks: MentorTask[]
-  summary: {
+  comments: any[]
+  summary?: {
     total: number
     completed: number
     pendingConfirmation: number
@@ -285,19 +316,17 @@ export interface MentorTask {
   title: string
   subject: Subject
   subjectName: string
+  checked: boolean
   goal: {
     id: number
     title: string
   } | null
   materials: TaskMaterial[]
   studyTime: number | null
-  isMentorAssigned: boolean
-  isMentorConfirmed: boolean
-  hasSubmission: boolean
-  hasFeedback: boolean
+  mentorConfirmed: boolean
+  uploadRequired: boolean
   submission: TaskSubmission | null
   feedback: Feedback | null
-  createdAt: string
 }
 
 // 멘토용 솔루션 (linkedTaskCount, createdAt 포함)

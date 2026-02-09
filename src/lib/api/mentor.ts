@@ -6,6 +6,8 @@ import type {
   MentorSolutionsResponse,
   MentorSolution,
   Subject,
+  NotificationsResponse,
+  ZoomMeeting,
 } from '@/types/api'
 
 /**
@@ -273,6 +275,43 @@ export const saveOverallComment = async (
 
   if (!response.data.success || !response.data.data) {
     throw new Error(response.data.message || '총평 저장에 실패했습니다.')
+  }
+
+  return response.data.data
+}
+
+/**
+ * 알림 목록 조회
+ * @param unreadOnly - 미확인만 조회 (기본값: false)
+ */
+export const getNotifications = async (
+  unreadOnly?: boolean
+): Promise<NotificationsResponse> => {
+  const response = await apiClient.get<ApiResponse<NotificationsResponse>>(
+    '/mentor/notifications',
+    unreadOnly !== undefined ? { params: { unreadOnly } } : undefined
+  )
+
+  if (!response.data.success || !response.data.data) {
+    throw new Error(response.data.message || '알림 조회에 실패했습니다.')
+  }
+
+  return response.data.data
+}
+
+/**
+ * Zoom 미팅 확인
+ * @param meetingId - Zoom 미팅 ID
+ */
+export const confirmZoomMeeting = async (
+  meetingId: number
+): Promise<ZoomMeeting> => {
+  const response = await apiClient.patch<ApiResponse<ZoomMeeting>>(
+    `/mentor/zoom-meetings/${meetingId}/confirm`
+  )
+
+  if (!response.data.success || !response.data.data) {
+    throw new Error(response.data.message || 'Zoom 미팅 확인에 실패했습니다.')
   }
 
   return response.data.data
