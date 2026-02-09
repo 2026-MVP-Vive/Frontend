@@ -27,7 +27,7 @@ import Solution from './pages/mentor/Solution'
 function AppContent() {
   const location = useLocation();
 
-  // FCM 초기화 및 토큰 전송 (멘토만)
+  // FCM 초기화 및 토큰 전송 (멘토 + 멘티 모두)
   useEffect(() => {
     const initFCM = async () => {
       // 로그인 페이지에서는 FCM 초기화 하지 않음
@@ -39,9 +39,9 @@ function AppContent() {
       const authToken = sessionStorage.getItem('authToken');
       const userRole = sessionStorage.getItem('userRole');
 
-      // 멘토가 아니거나 로그인하지 않은 경우 건너뛰기
-      if (!authToken || !messaging || userRole !== 'MENTOR') {
-        console.log('FCM 초기화 건너뛰기 (멘토만 허용):', { authToken: !!authToken, messaging: !!messaging, userRole });
+      // 로그인하지 않은 경우 건너뛰기
+      if (!authToken || !messaging) {
+        console.log('FCM 초기화 건너뛰기:', { authToken: !!authToken, messaging: !!messaging, userRole });
         return;
       }
 
@@ -121,10 +121,8 @@ function AppContent() {
       };
     }
 
-    // 멘토인 경우에만 FCM 초기화
-    if (userRole === 'MENTOR') {
-      initFCM();
-    }
+    // 모든 사용자(멘토 + 멘티) FCM 초기화
+    initFCM();
   }, [location.pathname]);
 
   return (
