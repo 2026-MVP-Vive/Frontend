@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { getStudentTasks } from "@/lib/api/mentorMock";
+import { getStudentTasks, saveFeedback, saveOverallComment } from "@/lib/api/mentor";
 import type { MentorTasksResponse, MentorTask } from "@/types/api";
 
 export default function DetailManage() {
@@ -84,21 +84,49 @@ export default function DetailManage() {
   };
 
   // 피드백 저장
-  const handleSaveFeedback = () => {
-    // TODO: API 연동
-    console.log("Save feedback:", {
-      taskId: selectedTaskId,
-      content: feedbackContent,
-      isImportant,
-    });
-    alert("피드백이 저장되었습니다.");
+  const handleSaveFeedback = async () => {
+    if (!selectedTaskId) {
+      alert("할 일을 선택해주세요.");
+      return;
+    }
+
+    if (!feedbackContent.trim()) {
+      alert("피드백 내용을 입력해주세요.");
+      return;
+    }
+
+    try {
+      await saveFeedback(
+        studentId,
+        selectedTaskId,
+        feedbackContent,
+        isImportant
+      );
+      alert("피드백이 저장되었습니다.");
+
+      // 할 일 목록 다시 로드하여 피드백 반영
+      const response = await getStudentTasks(studentId, selectedDate);
+      setData(response);
+    } catch (error) {
+      console.error("피드백 저장 실패:", error);
+      alert("피드백 저장에 실패했습니다.");
+    }
   };
 
   // 총평 저장
-  const handleSaveOverallComment = () => {
-    // TODO: API 연동
-    console.log("Save overall comment:", overallComment);
-    alert("총평이 저장되었습니다.");
+  const handleSaveOverallComment = async () => {
+    if (!overallComment.trim()) {
+      alert("총평 내용을 입력해주세요.");
+      return;
+    }
+
+    try {
+      await saveOverallComment(studentId, selectedDate, overallComment);
+      alert("총평이 저장되었습니다.");
+    } catch (error) {
+      console.error("총평 저장 실패:", error);
+      alert("총평 저장에 실패했습니다.");
+    }
   };
 
   if (isLoading || !data) {

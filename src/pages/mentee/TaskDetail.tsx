@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { ChevronLeft, FileText, Camera } from "lucide-react"
 import { useNavigate, useParams } from "react-router-dom"
 import { Button } from "@/components/ui/button"
-import { getTaskDetail, submitTaskImage } from "@/lib/api/menteeMock"
+import { getTaskDetail, submitTaskImage } from "@/lib/api/mentee"
 import type { TaskDetailResponse } from "@/types/api"
 
 type TabType = "materials" | "submit"

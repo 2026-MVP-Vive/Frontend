@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, CheckCircle2, Clock, AlertCircle, Bell } from "lucide-react";
 import BottomNav from "@/components/layout/BottomNav";
-import { getStudents } from "@/lib/api/mentorMock";
+import { getStudents } from "@/lib/api/mentor";
 import type { Student } from "@/types/api";
 
 export default function MenteeList() {

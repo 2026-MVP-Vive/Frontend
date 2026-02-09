@@ -66,6 +66,52 @@ export const getStudentSolutions = async (
 }
 
 /**
+ * 할 일 등록 (멘토가 멘티에게 부여)
+ * @param studentId - 멘티 ID
+ * @param title - 할 일 제목
+ * @param date - 수행 날짜 (YYYY-MM-DD)
+ * @param goalId - 목표(솔루션) ID (선택)
+ * @param materials - 학습지 파일 (선택)
+ */
+export const createMentorTask = async (
+  studentId: number,
+  title: string,
+  date: string,
+  goalId?: number,
+  materials?: File[]
+): Promise<any> => {
+  const formData = new FormData()
+  formData.append('title', title)
+  formData.append('date', date)
+
+  if (goalId) {
+    formData.append('goalId', goalId.toString())
+  }
+
+  if (materials && materials.length > 0) {
+    materials.forEach((file) => {
+      formData.append('materials', file)
+    })
+  }
+
+  const response = await apiClient.post<ApiResponse<any>>(
+    `/mentor/students/${studentId}/tasks`,
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  )
+
+  if (!response.data.success || !response.data.data) {
+    throw new Error(response.data.message || '할 일 등록에 실패했습니다.')
+  }
+
+  return response.data.data
+}
+
+/**
  * 솔루션 등록
  * @param studentId - 멘티 ID
  * @param title - 보완점 제목
@@ -172,4 +218,62 @@ export const deleteSolution = async (
   if (!response.data.success) {
     throw new Error(response.data.message || '솔루션 삭제에 실패했습니다.')
   }
+}
+
+/**
+ * 피드백 저장
+ * @param studentId - 멘티 ID
+ * @param taskId - 할 일 ID
+ * @param content - 피드백 내용
+ * @param isImportant - 중요 표시 여부 (선택)
+ * @param summary - 요약 (선택)
+ */
+export const saveFeedback = async (
+  studentId: number,
+  taskId: number,
+  content: string,
+  isImportant?: boolean,
+  summary?: string
+): Promise<any> => {
+  const response = await apiClient.post<ApiResponse<any>>(
+    `/mentor/students/${studentId}/feedbacks`,
+    {
+      taskId,
+      content,
+      isImportant,
+      summary,
+    }
+  )
+
+  if (!response.data.success || !response.data.data) {
+    throw new Error(response.data.message || '피드백 저장에 실패했습니다.')
+  }
+
+  return response.data.data
+}
+
+/**
+ * 총평 저장
+ * @param studentId - 멘티 ID
+ * @param date - 날짜 (YYYY-MM-DD)
+ * @param content - 총평 내용
+ */
+export const saveOverallComment = async (
+  studentId: number,
+  date: string,
+  content: string
+): Promise<any> => {
+  const response = await apiClient.put<ApiResponse<any>>(
+    `/mentor/students/${studentId}/feedbacks/overall`,
+    {
+      date,
+      content,
+    }
+  )
+
+  if (!response.data.success || !response.data.data) {
+    throw new Error(response.data.message || '총평 저장에 실패했습니다.')
+  }
+
+  return response.data.data
 }

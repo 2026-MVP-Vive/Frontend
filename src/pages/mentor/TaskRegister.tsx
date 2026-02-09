@@ -1,14 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
+import { getStudentSolutions, createMentorTask } from "@/lib/api/mentor";
+import type { MentorSolution } from "@/types/api";
 
 export default function TaskRegister() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const studentId = Number(id);
 
-  // Mock 학생 이름
-  const studentName = "민유진";
+  const [studentName, setStudentName] = useState("");
+  const [solutions, setSolutions] = useState<MentorSolution[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split("T")[0],
@@ -17,14 +21,24 @@ export default function TaskRegister() {
     materials: [] as File[],
   });
 
-  // Mock 솔루션 목록
-  const mockGoals = [
-    { id: 1, title: "국어 — 독해력 강화", subject: "KOREAN" },
-    { id: 2, title: "국어 — 문학 감상법 정리", subject: "KOREAN" },
-    { id: 3, title: "영어 — 구문 독해", subject: "ENGLISH" },
-    { id: 4, title: "수학 — 미적분 보완", subject: "MATH" },
-    { id: 5, title: "수학 — 조건부확률 공식 정리", subject: "MATH" },
-  ];
+  // 솔루션 목록 조회
+  useEffect(() => {
+    const loadSolutions = async () => {
+      setIsLoading(true);
+      try {
+        const data = await getStudentSolutions(studentId);
+        setSolutions(data.solutions);
+        setStudentName(data.studentName);
+      } catch (error) {
+        console.error("솔루션 목록 조회 실패:", error);
+        alert("솔루션 목록을 불러오는데 실패했습니다.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSolutions();
+  }, [studentId]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -35,16 +49,29 @@ export default function TaskRegister() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.title) {
       alert("할 일 이름을 입력하세요.");
       return;
     }
 
-    // TODO: API 연동
-    console.log("Task register:", formData);
-    alert("할 일이 등록되었습니다.");
-    navigate(`/mentor/students/${studentId}`);
+    setIsSubmitting(true);
+    try {
+      await createMentorTask(
+        studentId,
+        formData.title,
+        formData.date,
+        formData.goalId ? Number(formData.goalId) : undefined,
+        formData.materials.length > 0 ? formData.materials : undefined
+      );
+      alert("할 일이 등록되었습니다.");
+      navigate(`/mentor/students/${studentId}`);
+    } catch (error) {
+      console.error("할 일 등록 실패:", error);
+      alert("할 일 등록에 실패했습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCancel = () => {
@@ -111,12 +138,13 @@ export default function TaskRegister() {
               onChange={(e) =>
                 setFormData({ ...formData, goalId: e.target.value })
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              disabled={isLoading}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer disabled:bg-gray-100"
             >
               <option value="">선택하세요...</option>
-              {mockGoals.map((goal) => (
-                <option key={goal.id} value={goal.id}>
-                  {goal.title}
+              {solutions.map((solution) => (
+                <option key={solution.id} value={solution.id}>
+                  {solution.title}
                 </option>
               ))}
             </select>
@@ -182,9 +210,10 @@ export default function TaskRegister() {
             </button>
             <button
               onClick={handleSubmit}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              disabled={isSubmitting}
+              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              할 일 등록
+              {isSubmitting ? "등록 중..." : "할 일 등록"}
             </button>
           </div>
         </div>

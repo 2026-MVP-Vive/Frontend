@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useNavigate, useParams } from "react-router-dom"
 import BottomNav from "@/components/layout/BottomNav"
-import { getFeedbacksByDate } from "@/lib/api/menteeMock"
+import { getFeedbacksByDate } from "@/lib/api/mentee"
 import type { YesterdayFeedbackResponse } from "@/types/api"
 
 export default function FeedbackPage() {

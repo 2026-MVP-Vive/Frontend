@@ -18,7 +18,7 @@ import {
   getYesterdayFeedback,
   completePlanner,
   createZoomMeeting,
-} from "@/lib/api/menteeMock";
+} from "@/lib/api/mentee";
 import type { Task, Feedback } from "@/types/api";
 
 export default function MentiMain() {
