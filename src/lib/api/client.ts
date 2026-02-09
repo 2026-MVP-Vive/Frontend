@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://3.37.155.46/api/v1";
+const API_BASE_URL = "https://seolstudy.duckdns.org/api/v1";
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
