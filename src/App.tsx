@@ -95,9 +95,8 @@ function AppContent() {
       }
     };
 
-    // 포그라운드 메시지 핸들러 (멘티만)
-    const userRole = sessionStorage.getItem('userRole');
-    if (messaging && userRole === 'MENTEE') {
+    // 포그라운드 메시지 핸들러 (멘토 + 멘티 모두)
+    if (messaging) {
       const unsubscribe = onMessage(messaging, (payload) => {
         console.log('포그라운드 메시지 수신:', payload);
 
@@ -116,13 +115,16 @@ function AppContent() {
         }
       });
 
+      // 모든 사용자(멘토 + 멘티) FCM 초기화
+      initFCM();
+
       return () => {
         unsubscribe();
       };
+    } else {
+      // messaging이 없는 경우에도 FCM 초기화 시도
+      initFCM();
     }
-
-    // 모든 사용자(멘토 + 멘티) FCM 초기화
-    initFCM();
   }, [location.pathname]);
 
   return (
