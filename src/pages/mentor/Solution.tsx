@@ -237,6 +237,9 @@ export default function Solution() {
                 onChange={handleFileChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                PDF, DOC, DOCX (각 10MB 이하)
+              </p>
             </div>
           </div>
           <div className="flex gap-2 justify-end mt-4">
@@ -312,6 +315,9 @@ export default function Solution() {
                         onChange={handleFileChange}
                         className="text-xs"
                       />
+                      <p className="text-xs text-gray-500 mt-1">
+                        PDF, DOC, DOCX (각 10MB 이하)
+                      </p>
                     </td>
                     <td className="px-6 py-4 text-center">
                       <div className="flex gap-1 justify-center">

@@ -68,13 +68,13 @@ export default function FeedbackPage() {
   const getSubjectColor = (subject: string) => {
     switch (subject) {
       case "KOREAN":
-        return "bg-red-500 text-red-600"
+        return "bg-red-500 text-white"
       case "ENGLISH":
-        return "bg-blue-500 text-blue-600"
+        return "bg-blue-500 text-white"
       case "MATH":
-        return "bg-green-500 text-green-600"
+        return "bg-green-500 text-white"
       default:
-        return "bg-gray-500 text-gray-600"
+        return "bg-gray-500 text-white"
     }
   }
 
@@ -148,7 +148,7 @@ export default function FeedbackPage() {
                     {/* Subject and Title */}
                     <div className="flex items-center gap-3 mb-3">
                       <span
-                        className={`text-sm px-2.5 py-1 bg-opacity-10 rounded font-medium ${getSubjectColor(
+                        className={`text-sm px-2.5 py-1 rounded font-medium ${getSubjectColor(
                           feedback.subject
                         )}`}
                       >

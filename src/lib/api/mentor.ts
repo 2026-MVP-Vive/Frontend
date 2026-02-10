@@ -300,6 +300,29 @@ export const getNotifications = async (
 }
 
 /**
+ * 멘토 확인 체크
+ * @param studentId - 멘티 ID
+ * @param taskId - 할 일 ID
+ * @param confirmed - 확인 여부
+ */
+export const confirmTask = async (
+  studentId: number,
+  taskId: number,
+  confirmed: boolean
+): Promise<any> => {
+  const response = await apiClient.patch<ApiResponse<any>>(
+    `/mentor/students/${studentId}/tasks/${taskId}/confirm`,
+    { confirmed }
+  )
+
+  if (!response.data.success || !response.data.data) {
+    throw new Error(response.data.message || '멘토 확인에 실패했습니다.')
+  }
+
+  return response.data.data
+}
+
+/**
  * Zoom 미팅 확인
  * @param meetingId - Zoom 미팅 ID
  */

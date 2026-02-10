@@ -172,8 +172,11 @@ export default function TaskRegister() {
                 className="cursor-pointer flex flex-col items-center"
               >
                 <span className="text-3xl mb-2">📎</span>
-                <span className="text-sm text-gray-600">
-                  설스터디 칼럼 또는 PDF 파일을 업로드하세요
+                <span className="text-sm text-gray-600 mb-1">
+                  클릭하여 파일을 업로드하세요
+                </span>
+                <span className="text-xs text-gray-500">
+                  지원 형식: PDF, DOC, DOCX (여러 파일 선택 가능, 각 10MB 이하)
                 </span>
                 {formData.materials.length > 0 && (
                   <div className="mt-3 text-xs text-blue-600">

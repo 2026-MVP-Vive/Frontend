@@ -28,7 +28,9 @@ export default function TaskDetail() {
 
         // 기존 제출 사진이 있으면 표시
         if (data.submission) {
-          setUploadedImages([`${import.meta.env.VITE_API_BASE_URL || 'https://wynona-malacophilous-nonaccidentally.ngrok-free.dev'}${data.submission.imageUrl}`])
+          const existingImageUrl = `${import.meta.env.VITE_API_BASE_URL || 'https://seolstudy.duckdns.org'}${data.submission.imageUrl}`
+          console.log("📷 기존 제출 이미지:", existingImageUrl)
+          setUploadedImages([existingImageUrl])
         }
       } catch (error) {
         console.error('할 일 상세 조회 실패:', error)
@@ -46,13 +48,13 @@ export default function TaskDetail() {
   const getSubjectColor = (subject: string) => {
     switch (subject) {
       case 'KOREAN':
-        return 'bg-red-500 text-red-600'
+        return 'bg-red-500 text-white'
       case 'ENGLISH':
-        return 'bg-blue-500 text-blue-600'
+        return 'bg-blue-500 text-white'
       case 'MATH':
-        return 'bg-green-500 text-green-600'
+        return 'bg-green-500 text-white'
       default:
-        return 'bg-gray-500 text-gray-600'
+        return 'bg-gray-500 text-white'
     }
   }
 
@@ -76,9 +78,12 @@ export default function TaskDetail() {
     try {
       // API 호출하여 서버에 업로드
       const submission = await submitTaskImage(Number(id), file)
+      console.log("📤 제출 API 응답:", submission)
 
       // 업로드 성공 - 미리보기 이미지 추가
-      const imageUrl = `${import.meta.env.VITE_API_BASE_URL || 'https://wynona-malacophilous-nonaccidentally.ngrok-free.dev'}${submission.imageUrl}`
+      const imageUrl = `${import.meta.env.VITE_API_BASE_URL || 'https://seolstudy.duckdns.org'}${submission.imageUrl}`
+      console.log("🖼️ 생성된 이미지 URL:", imageUrl)
+
       setUploadedImages([imageUrl])
 
       // task 상태 업데이트
@@ -91,7 +96,7 @@ export default function TaskDetail() {
 
       alert("과제 제출이 완료되었습니다!")
     } catch (error) {
-      console.error("과제 제출 실패:", error)
+      console.error("❌ 과제 제출 실패:", error)
       alert("과제 제출에 실패했습니다. 다시 시도해주세요.")
     } finally {
       setIsUploading(false)
@@ -102,7 +107,7 @@ export default function TaskDetail() {
 
   const handleDownload = (downloadUrl: string, fileName: string) => {
     const link = document.createElement('a')
-    link.href = `${import.meta.env.VITE_API_BASE_URL || 'https://wynona-malacophilous-nonaccidentally.ngrok-free.dev'}${downloadUrl}`
+    link.href = `${import.meta.env.VITE_API_BASE_URL || 'https://seolstudy.duckdns.org'}${downloadUrl}`
     link.download = fileName
     link.click()
   }
@@ -136,7 +141,7 @@ export default function TaskDetail() {
         <div className="bg-white px-4 py-5 border-b border-gray-100">
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             <span
-              className={`text-sm px-2.5 py-1 bg-opacity-10 rounded font-medium ${getSubjectColor(task.subject)}`}
+              className={`text-sm px-2.5 py-1 rounded font-medium ${getSubjectColor(task.subject)}`}
             >
               {task.subjectName}
             </span>
@@ -252,31 +257,43 @@ export default function TaskDetail() {
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                 <h3 className="text-sm font-bold mb-4">공부 인증 사진</h3>
 
-                {/* Upload Area */}
-                <label
-                  htmlFor="photo-upload"
-                  className={`block border-2 border-dashed border-gray-300 rounded-xl p-8 text-center transition-colors ${
-                    isUploading
-                      ? "cursor-not-allowed opacity-50"
-                      : "cursor-pointer hover:border-blue-400 hover:bg-blue-50"
-                  }`}
-                >
-                  <Camera className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-sm text-gray-600 mb-1">
-                    {isUploading
-                      ? "업로드 중..."
-                      : "카메라로 촬영하거나 갤러리에서 선택하세요"}
-                  </p>
-                  <p className="text-xs text-gray-400">(JPG, 최대 10MB)</p>
-                  <input
-                    id="photo-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    disabled={isUploading}
-                    className="hidden"
-                  />
-                </label>
+                {/* Upload Area - 이미 제출한 경우 비활성화 */}
+                {!task.submission ? (
+                  <label
+                    htmlFor="photo-upload"
+                    className={`block border-2 border-dashed border-gray-300 rounded-xl p-8 text-center transition-colors ${
+                      isUploading
+                        ? "cursor-not-allowed opacity-50"
+                        : "cursor-pointer hover:border-blue-400 hover:bg-blue-50"
+                    }`}
+                  >
+                    <Camera className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                    <p className="text-sm text-gray-600 mb-1">
+                      {isUploading
+                        ? "업로드 중..."
+                        : "카메라로 촬영하거나 갤러리에서 선택하세요"}
+                    </p>
+                    <p className="text-xs text-gray-400">(JPG, 최대 10MB)</p>
+                    <input
+                      id="photo-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={isUploading}
+                      className="hidden"
+                    />
+                  </label>
+                ) : (
+                  <div className="border-2 border-gray-200 rounded-xl p-8 text-center bg-gray-50">
+                    <Camera className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                    <p className="text-sm text-gray-600 mb-1">
+                      제출이 완료되었습니다
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      제출된 사진은 수정할 수 없습니다
+                    </p>
+                  </div>
+                )}
 
                 {/* Preview Thumbnails */}
                 <div className="mt-4 grid grid-cols-2 gap-3">
@@ -290,17 +307,26 @@ export default function TaskDetail() {
                           src={image}
                           alt={`Upload ${index + 1}`}
                           className="w-full h-full object-cover"
-                        />
-                        <button
-                          onClick={() => {
-                            setUploadedImages(prev =>
-                              prev.filter((_, i) => i !== index)
-                            )
+                          onLoad={() => console.log("✅ 이미지 로드 성공:", image)}
+                          onError={(e) => {
+                            console.error("❌ 이미지 로드 실패:", image)
+                            const imgElement = e.target as HTMLImageElement
+                            imgElement.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f0f0f0' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999'%3E로드 실패%3C/text%3E%3C/svg%3E"
                           }}
-                          className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600 transition-colors"
-                        >
-                          ×
-                        </button>
+                        />
+                        {/* 제출 완료된 경우 삭제 버튼 숨김 */}
+                        {!task.submission && (
+                          <button
+                            onClick={() => {
+                              setUploadedImages(prev =>
+                                prev.filter((_, i) => i !== index)
+                              )
+                            }}
+                            className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600 transition-colors"
+                          >
+                            ×
+                          </button>
+                        )}
                       </div>
                     ))
                   ) : (

@@ -6,10 +6,11 @@ importScripts(
   "https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js",
 );
 
-// Firebase 설정 (본인의 Firebase 콘솔 설정값을 넣으세요)
+// Firebase 설정
+// ⚠️ Service Worker는 import.meta.env를 사용할 수 없으므로 직접 값을 넣어야 함
 firebase.initializeApp({
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  apiKey: "AIzaSyCirg0T_TA7_0XS1UzsWn52BqlHC8RDAAA",
+  projectId: "seolstudy-c253a",
   messagingSenderId: "575403466517",
   appId: "1:575403466517:web:16b88022e2ea608e61531c",
 });

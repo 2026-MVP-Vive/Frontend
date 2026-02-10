@@ -1,4 +1,4 @@
-import { Calendar, BookOpen, User, Home, Users, ClipboardList } from "lucide-react"
+import { Calendar, BookOpen, Home, Users, ClipboardList } from "lucide-react"
 import { useNavigate, useLocation } from "react-router-dom"
 
 interface NavItem {
@@ -19,15 +19,13 @@ export default function BottomNav({
   const location = useLocation()
   const menteeNavItems: NavItem[] = [
     { icon: <Calendar className="w-6 h-6" />, label: "캘린더", path: "/mentee/planner" },
-    { icon: <BookOpen className="w-6 h-6" />, label: "학습자료", path: "/mentee/resources" },
-    { icon: <User className="w-6 h-6" />, label: "마이", path: "/mentee/mypage" }
+    { icon: <BookOpen className="w-6 h-6" />, label: "학습자료", path: "/mentee/resources" }
   ]
 
   const mentorNavItems: NavItem[] = [
     { icon: <Home className="w-6 h-6" />, label: "홈", path: "/mentor/students" },
     { icon: <Users className="w-6 h-6" />, label: "멘티", path: "/mentor/students" },
-    { icon: <ClipboardList className="w-6 h-6" />, label: "관리", path: "/mentor/students" },
-    { icon: <User className="w-6 h-6" />, label: "마이", path: "/mentor/mypage" }
+    { icon: <ClipboardList className="w-6 h-6" />, label: "관리", path: "/mentor/students" }
   ]
 
   const navItems = userRole === "mentee" ? menteeNavItems : mentorNavItems

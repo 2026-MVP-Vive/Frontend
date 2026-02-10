@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, CheckCircle2, Clock, AlertCircle, Bell } from "lucide-react";
-import BottomNav from "@/components/layout/BottomNav";
 import { getStudents, getNotifications, confirmZoomMeeting } from "@/lib/api/mentor";
 import type { Student, Notification } from "@/types/api";
 
@@ -99,7 +98,7 @@ export default function MenteeList() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto px-4 py-6 pb-20">
+      <main className="flex-1 overflow-y-auto px-4 py-6">
         {/* Header */}
         <div className="mb-6">
           <div
@@ -315,9 +314,6 @@ export default function MenteeList() {
           </div>
         )}
       </main>
-
-      {/* Bottom Navigation */}
-      <BottomNav userRole="mentor" />
     </div>
   );
 }

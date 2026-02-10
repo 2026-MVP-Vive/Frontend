@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { getStudentTasks, saveFeedback, saveOverallComment } from "@/lib/api/mentor";
+import {
+  getStudentTasks,
+  saveFeedback,
+  saveOverallComment,
+  confirmTask,
+} from "@/lib/api/mentor";
 import type { MentorTasksResponse, MentorTask } from "@/types/api";
 
 export default function DetailManage() {
@@ -71,9 +76,27 @@ export default function DetailManage() {
   };
 
   // 멘토 확인 토글
-  const handleConfirmToggle = (taskId: number) => {
-    // TODO: API 연동
-    console.log("Confirm toggle:", taskId);
+  const handleConfirmToggle = async (taskId: number) => {
+    if (!data) return;
+
+    const task = data.tasks.find((t) => t.id === taskId);
+    if (!task) return;
+
+    try {
+      // API 호출
+      await confirmTask(studentId, taskId, !task.mentorConfirmed);
+
+      // 상태 업데이트 (낙관적 업데이트)
+      setData({
+        ...data,
+        tasks: data.tasks.map((t) =>
+          t.id === taskId ? { ...t, mentorConfirmed: !t.mentorConfirmed } : t,
+        ),
+      });
+    } catch (error) {
+      console.error("멘토 확인 실패:", error);
+      alert("멘토 확인에 실패했습니다. 다시 시도해주세요.");
+    }
   };
 
   // 할 일 선택
@@ -100,7 +123,7 @@ export default function DetailManage() {
         studentId,
         selectedTaskId,
         feedbackContent,
-        isImportant
+        isImportant,
       );
       alert("피드백이 저장되었습니다.");
 
@@ -197,14 +220,24 @@ export default function DetailManage() {
       </div>
 
       {/* 플래너 마감 상태 */}
-      {data.completed && (
-        <div className="mb-4 flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-          <span className="text-lg">✅</span>
-          <span className="text-sm font-semibold text-green-700">
-            멘티가 플래너 마감 요청을 했습니다
-          </span>
-        </div>
-      )}
+      <div
+        className={`mb-4 flex items-center gap-3 p-3 rounded-lg ${
+          data.completed
+            ? "bg-green-50 border border-green-200"
+            : "bg-gray-50 border border-gray-200"
+        }`}
+      >
+        <span className="text-lg">{data.completed ? "✅" : "⏳"}</span>
+        <span
+          className={`text-sm font-semibold ${
+            data.completed ? "text-green-700" : "text-gray-600"
+          }`}
+        >
+          {data.completed
+            ? "멘티가 플래너 마감 요청을 했습니다"
+            : "멘티가 아직 플래너 마감 요청을 하지 않았습니다"}
+        </span>
+      </div>
 
       {/* 2-패널 레이아웃 */}
       <div className="grid grid-cols-2 gap-6">
@@ -218,19 +251,22 @@ export default function DetailManage() {
             <table className="w-full">
               <thead className="border-b border-gray-200">
                 <tr>
-                  <th className="text-left text-xs font-semibold text-gray-600 pb-3">
+                  <th className="text-left text-xs font-semibold text-gray-600 pb-3 w-1/5">
                     이름
                   </th>
-                  <th className="text-left text-xs font-semibold text-gray-600 pb-3">
+                  <th className="text-left text-xs font-semibold text-gray-600 pb-3 w-1/6">
                     과목
                   </th>
-                  <th className="text-left text-xs font-semibold text-gray-600 pb-3">
+                  <th className="text-left text-xs font-semibold text-gray-600 pb-3 w-1/5">
                     목표
                   </th>
-                  <th className="text-left text-xs font-semibold text-gray-600 pb-3">
+                  <th className="text-left text-xs font-semibold text-gray-600 pb-3 w-1/6">
                     유형
                   </th>
-                  <th className="text-center text-xs font-semibold text-gray-600 pb-3">
+                  <th className="text-center text-xs font-semibold text-gray-600 pb-3 w-16">
+                    제출완료
+                  </th>
+                  <th className="text-center text-xs font-semibold text-gray-600 pb-3 w-16">
                     확인
                   </th>
                 </tr>
@@ -244,40 +280,51 @@ export default function DetailManage() {
                       selectedTaskId === task.id ? "bg-blue-50" : ""
                     }`}
                   >
-                    <td className="py-3 text-sm font-medium text-gray-900">
+                    <td className="py-3 text-sm font-medium text-gray-900 align-middle">
                       {task.title}
                     </td>
-                    <td className="py-3">
+                    <td className="py-3 align-middle">
                       <span
                         className={`text-xs px-2 py-1 rounded-full font-medium ${getSubjectColor(task.subject)}`}
                       >
                         {task.subjectName}
                       </span>
                     </td>
-                    <td className="py-3 text-xs text-gray-600">
+                    <td className="py-3 text-xs text-gray-600 align-middle">
                       {task.goal?.title || "—"}
                     </td>
-                    <td className="py-3">
+                    <td className="py-3 align-middle">
                       <span className="text-xs px-2 py-1 rounded-full font-medium bg-gray-100 text-gray-700">
                         멘티
                       </span>
                     </td>
-                    <td className="py-3 text-center">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleConfirmToggle(task.id);
-                        }}
-                        className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${
-                          task.checked
-                            ? "bg-blue-600 border-blue-600 text-white"
-                            : "border-gray-300 hover:border-blue-400"
+                    <td className="py-3 text-center align-middle">
+                      <span
+                        className={`text-sm font-bold ${
+                          task.checked ? "text-green-600" : "text-red-500"
                         }`}
                       >
-                        {task.checked && (
-                          <span className="text-xs">✓</span>
-                        )}
-                      </button>
+                        {task.checked ? "O" : "X"}
+                      </span>
+                    </td>
+                    <td className="py-3 align-middle">
+                      <div className="flex justify-center">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleConfirmToggle(task.id);
+                          }}
+                          className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${
+                            task.mentorConfirmed
+                              ? "bg-blue-600 border-blue-600 text-white"
+                              : "border-gray-300 hover:border-blue-400"
+                          }`}
+                        >
+                          {task.mentorConfirmed && (
+                            <span className="text-xs">✓</span>
+                          )}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -287,33 +334,64 @@ export default function DetailManage() {
 
           {/* 제출 인증사진 */}
           <div className="mt-6">
-            <h3 className="text-xs font-semibold text-gray-600 mb-3">
-              제출 인증사진
-            </h3>
-            <div className="flex gap-2">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs font-semibold text-gray-600">
+                제출 인증사진
+              </h3>
+              {(() => {
+                const submittedCount = data.tasks.filter(
+                  (task) => task.submission,
+                ).length;
+                const notSubmittedCount = data.tasks.filter(
+                  (task) => !task.submission,
+                ).length;
+                return (
+                  <span className="text-xs text-gray-500">
+                    제출: {submittedCount}개 | 미제출: {notSubmittedCount}개
+                  </span>
+                );
+              })()}
+            </div>
+            <div className="flex gap-2 flex-wrap">
               {data.tasks
                 .filter((task) => task.submission)
-                .slice(0, 4)
-                .map((task) => (
-                  <div
-                    key={task.id}
-                    className="w-24 h-24 rounded-lg border border-gray-200 bg-gray-100 flex items-center justify-center text-xs text-gray-600"
-                  >
-                    <img
-                      src={task.submission!.imageUrl}
-                      alt={task.title}
-                      className="w-full h-full object-cover rounded-lg"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                        e.currentTarget.parentElement!.textContent =
-                          task.subjectName;
-                      }}
-                    />
-                  </div>
-                ))}
-              {data.tasks.filter((task) => !task.submission).length > 0 && (
-                <div className="w-24 h-24 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-xs text-gray-400">
-                  미제출
+                .map((task) => {
+                  const imageUrl = `https://seolstudy.duckdns.org${task.submission!.imageUrl}`;
+                  console.log("🖼️ 멘토 페이지 - 제출 이미지:", imageUrl);
+
+                  return (
+                    <div
+                      key={task.id}
+                      className="w-24 h-24 rounded-lg border border-gray-200 bg-gray-100 flex items-center justify-center text-xs text-gray-600 cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => window.open(imageUrl, "_blank")}
+                      title={`${task.title} - 클릭하여 확대`}
+                    >
+                      <img
+                        src={imageUrl}
+                        alt={task.title}
+                        className="w-full h-full object-cover rounded-lg"
+                        onLoad={() =>
+                          console.log("✅ 이미지 로드 성공:", imageUrl)
+                        }
+                        onError={(e) => {
+                          console.error("❌ 이미지 로드 실패:", imageUrl);
+                          e.currentTarget.style.display = "none";
+                          e.currentTarget.parentElement!.innerHTML = `
+                            <div class="text-center">
+                              <div class="text-xs text-gray-400">${task.subjectName}</div>
+                              <div class="text-xs text-red-500 mt-1">로드 실패</div>
+                            </div>
+                          `;
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              {data.tasks.filter((task) => task.submission).length === 0 && (
+                <div className="w-full py-8 text-center">
+                  <p className="text-sm text-gray-400">
+                    제출된 사진이 없습니다
+                  </p>
                 </div>
               )}
             </div>
@@ -332,9 +410,7 @@ export default function DetailManage() {
               <div className="mb-4">
                 <label className="block text-xs font-semibold text-gray-600 mb-2">
                   선택된 할 일:{" "}
-                  {
-                    data.tasks.find((t) => t.id === selectedTaskId)?.title
-                  }
+                  {data.tasks.find((t) => t.id === selectedTaskId)?.title}
                 </label>
                 <textarea
                   value={feedbackContent}
@@ -388,9 +464,9 @@ export default function DetailManage() {
               rows={3}
             />
             <div className="flex gap-2">
-              <button className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+              {/* <button className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
                 임시저장
-              </button>
+              </button> */}
               <button
                 onClick={handleSaveOverallComment}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"

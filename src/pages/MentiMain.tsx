@@ -27,6 +27,7 @@ export default function MentiMain() {
   const [selectedDate, setSelectedDate] = useState(new Date().getDate());
   const [tasks, setTasks] = useState<Task[]>([]);
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
+  const [yesterdayDate, setYesterdayDate] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [isPlannerCompleted, setIsPlannerCompleted] = useState(false);
   const [checkedTasks, setCheckedTasks] = useState<Set<number>>(new Set());
@@ -107,6 +108,7 @@ export default function MentiMain() {
     try {
       const data = await getYesterdayFeedback();
       setFeedbacks(data.feedbacks);
+      setYesterdayDate(data.date); // 어제 날짜 저장
     } catch (error) {
       console.error("피드백 조회 실패:", error);
     }
@@ -183,13 +185,13 @@ export default function MentiMain() {
   const getSubjectColor = (subject: string) => {
     switch (subject) {
       case "KOREAN":
-        return "bg-red-500 text-red-600";
+        return "bg-red-500 text-white";
       case "ENGLISH":
-        return "bg-blue-500 text-blue-600";
+        return "bg-blue-500 text-white";
       case "MATH":
-        return "bg-green-500 text-green-600";
+        return "bg-green-500 text-white";
       default:
-        return "bg-gray-500 text-gray-600";
+        return "bg-gray-500 text-white";
     }
   };
 
@@ -339,7 +341,7 @@ export default function MentiMain() {
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">
                           <span
-                            className={`text-sm px-2 py-0.5 bg-opacity-10 rounded ${getSubjectColor(
+                            className={`text-sm px-2 py-0.5 rounded ${getSubjectColor(
                               task.subject,
                             )}`}
                           >
@@ -413,13 +415,13 @@ export default function MentiMain() {
                 <div
                   key={feedback.id}
                   onClick={() =>
-                    navigate(`/mentee/feedback/${feedback.taskId}`)
+                    navigate(`/mentee/feedback/${yesterdayDate}`)
                   }
                   className="bg-white rounded-xl p-4 shadow-sm border-l-4 border-blue-600 cursor-pointer hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-start gap-3 mb-3">
                     <span
-                      className={`text-sm px-2.5 py-1 bg-opacity-10 rounded font-medium ${getSubjectColor(
+                      className={`text-sm px-2.5 py-1 rounded font-medium ${getSubjectColor(
                         feedback.subject,
                       )}`}
                     >
