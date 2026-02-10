@@ -305,14 +305,10 @@ export const saveOverallComment = async (
 
 /**
  * 알림 목록 조회
- * @param unreadOnly - 미확인만 조회 (기본값: false)
  */
-export const getNotifications = async (
-  unreadOnly?: boolean,
-): Promise<NotificationsResponse> => {
+export const getNotifications = async (): Promise<NotificationsResponse> => {
   const response = await apiClient.get<ApiResponse<NotificationsResponse>>(
-    "/mentor/notifications",
-    // unreadOnly !== undefined ? { params: { unreadOnly } } : undefined
+    "/mentor/notifications"
   );
 
   if (!response.data.success || !response.data.data) {

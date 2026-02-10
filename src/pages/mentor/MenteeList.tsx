@@ -35,7 +35,7 @@ export default function MenteeList() {
   // 알림 목록 로드
   const loadNotifications = async () => {
     try {
-      const data = await getNotifications(true); // 미확인만 조회
+      const data = await getNotifications();
       setNotifications(data.notifications);
       setUnreadCount(data.unreadCount);
     } catch (error) {
