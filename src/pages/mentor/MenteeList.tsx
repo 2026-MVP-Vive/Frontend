@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, CheckCircle2, Clock, AlertCircle, Bell } from "lucide-react";
+import toast from "react-hot-toast";
 import { getStudents, getNotifications, confirmZoomMeeting } from "@/lib/api/mentor";
 import type { Student, Notification } from "@/types/api";
 
@@ -21,7 +22,7 @@ export default function MenteeList() {
         setStudents(data.students);
       } catch (error) {
         console.error("멘티 목록 조회 실패:", error);
-        alert("멘티 목록을 불러오는데 실패했습니다.");
+        toast.error("멘티 목록을 불러오는데 실패했습니다.");
       } finally {
         setIsLoading(false);
       }
@@ -57,12 +58,12 @@ export default function MenteeList() {
     try {
       if (notification.type === "ZOOM_REQUEST" && notification.relatedId) {
         await confirmZoomMeeting(notification.relatedId);
-        alert("Zoom 미팅이 확인되었습니다.");
+        toast.success("Zoom 미팅이 확인되었습니다.");
         loadNotifications(); // 목록 새로고침
       }
     } catch (error) {
       console.error("알림 처리 실패:", error);
-      alert("알림 처리에 실패했습니다.");
+      toast.error("알림 처리에 실패했습니다.");
     }
   };
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
+import toast from "react-hot-toast";
 import {
   getStudentSolutions,
   createSolution,
@@ -36,7 +37,7 @@ export default function Solution() {
         setSolutions(data.solutions);
       } catch (error) {
         console.error("솔루션 조회 실패:", error);
-        alert("솔루션 목록을 불러오는데 실패했습니다.");
+        toast.error("솔루션 목록을 불러오는데 실패했습니다.");
       } finally {
         setIsLoading(false);
       }
@@ -75,7 +76,7 @@ export default function Solution() {
 
   const handleSave = async () => {
     if (!formData.title || !formData.subject) {
-      alert("보완점과 과목을 입력하세요.");
+      toast.error("보완점과 과목을 입력하세요.");
       return;
     }
 
@@ -96,7 +97,7 @@ export default function Solution() {
           )
         );
         setEditingId(null);
-        alert("솔루션이 수정되었습니다.");
+        toast.success("솔루션이 수정되었습니다.");
       } else {
         // 추가
         const newSolution = await createSolution(
@@ -108,13 +109,13 @@ export default function Solution() {
 
         setSolutions([...solutions, newSolution]);
         setShowAddForm(false);
-        alert("솔루션이 추가되었습니다.");
+        toast.success("솔루션이 추가되었습니다.");
       }
 
       setFormData({ title: "", subject: "", materialFiles: [] });
     } catch (error) {
       console.error("솔루션 저장 실패:", error);
-      alert("솔루션 저장에 실패했습니다.");
+      toast.error("솔루션 저장에 실패했습니다.");
     }
   };
 
@@ -132,10 +133,10 @@ export default function Solution() {
     try {
       await deleteSolution(studentId, id);
       setSolutions(solutions.filter((s) => s.id !== id));
-      alert("솔루션이 삭제되었습니다.");
+      toast.success("솔루션이 삭제되었습니다.");
     } catch (error) {
       console.error("솔루션 삭제 실패:", error);
-      alert("솔루션 삭제에 실패했습니다.");
+      toast.error("솔루션 삭제에 실패했습니다.");
     }
   };
 

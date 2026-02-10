@@ -29,8 +29,8 @@ export default defineConfig({
         "firebase-messaging-sw.js",
       ],
       manifest: {
-        name: "섬스터디",
-        short_name: "섬스터디",
+        name: "설스터디",
+        short_name: "설스터디",
         description: "자체 콘텐츠 기반 수능 국영수 학습코칭",
         theme_color: "#2d3548",
         background_color: "#ffffff",

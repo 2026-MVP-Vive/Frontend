@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
+import toast from "react-hot-toast";
 import { getStudentSolutions, createMentorTask } from "@/lib/api/mentor";
 import type { MentorSolution } from "@/types/api";
 
@@ -31,7 +32,7 @@ export default function TaskRegister() {
         setStudentName(data.studentName);
       } catch (error) {
         console.error("솔루션 목록 조회 실패:", error);
-        alert("솔루션 목록을 불러오는데 실패했습니다.");
+        toast.error("솔루션 목록을 불러오는데 실패했습니다.");
       } finally {
         setIsLoading(false);
       }
@@ -51,7 +52,7 @@ export default function TaskRegister() {
 
   const handleSubmit = async () => {
     if (!formData.title) {
-      alert("할 일 이름을 입력하세요.");
+      toast.error("할 일 이름을 입력하세요.");
       return;
     }
 
@@ -64,11 +65,11 @@ export default function TaskRegister() {
         formData.goalId ? Number(formData.goalId) : undefined,
         formData.materials.length > 0 ? formData.materials : undefined
       );
-      alert("할 일이 등록되었습니다.");
+      toast.success("할 일이 등록되었습니다.");
       navigate(`/mentor/students/${studentId}`);
     } catch (error) {
       console.error("할 일 등록 실패:", error);
-      alert("할 일 등록에 실패했습니다.");
+      toast.error("할 일 등록에 실패했습니다.");
     } finally {
       setIsSubmitting(false);
     }

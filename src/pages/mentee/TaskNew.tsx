@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ChevronLeft, Camera, X } from "lucide-react";
+import toast from "react-hot-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { createTask } from "@/lib/api";
@@ -33,12 +34,12 @@ export default function TaskNew() {
 
     // 파일 크기 및 타입 검증
     if (!file.type.startsWith("image/")) {
-      alert("이미지 파일만 업로드 가능합니다.");
+      toast.error("이미지 파일만 업로드 가능합니다.");
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      alert("파일 크기는 10MB 이하여야 합니다.");
+      toast.error("파일 크기는 10MB 이하여야 합니다.");
       return;
     }
 
@@ -61,12 +62,12 @@ export default function TaskNew() {
     e.preventDefault();
 
     if (!title.trim()) {
-      alert("할 일 제목을 입력해주세요.");
+      toast.error("할 일 제목을 입력해주세요.");
       return;
     }
 
     if (!subject) {
-      alert("과목을 선택해주세요.");
+      toast.error("과목을 선택해주세요.");
       return;
     }
 
@@ -82,22 +83,22 @@ export default function TaskNew() {
       // 2. 인증사진이 있으면 업로드
       if (imageFile && task.id) {
         await submitTaskImage(task.id, imageFile);
-        alert("할 일과 인증사진이 추가되었습니다!");
+        toast.success("할 일과 인증사진이 추가되었습니다!");
       } else {
-        alert("할 일이 추가되었습니다!");
+        toast.success("할 일이 추가되었습니다!");
       }
 
       navigate("/mentee");
     } catch (error) {
       console.error("할 일 추가 실패:", error);
-      alert("할 일 추가에 실패했습니다.");
+      toast.error("할 일 추가에 실패했습니다.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-gray-50 max-w-md mx-auto">
       {/* Header */}
       <header className="bg-white px-4 py-4 border-b border-gray-200">
         <div className="flex items-center gap-3">

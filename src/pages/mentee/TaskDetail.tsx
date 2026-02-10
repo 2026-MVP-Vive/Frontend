@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { ChevronLeft, FileText, Camera } from "lucide-react"
 import { useNavigate, useParams } from "react-router-dom"
+import toast from "react-hot-toast"
 import { Button } from "@/components/ui/button"
 import { getTaskDetail, submitTaskImage } from "@/lib/api/mentee"
 import type { TaskDetailResponse } from "@/types/api"
@@ -34,7 +35,7 @@ export default function TaskDetail() {
         }
       } catch (error) {
         console.error('할 일 상세 조회 실패:', error)
-        alert('할 일 정보를 불러오는데 실패했습니다.')
+        toast.error('할 일 정보를 불러오는데 실패했습니다.')
         navigate(-1)
       } finally {
         setIsLoading(false)
@@ -64,12 +65,12 @@ export default function TaskDetail() {
 
     // 파일 크기 및 타입 검증
     if (!file.type.startsWith("image/")) {
-      alert("이미지 파일만 업로드 가능합니다.")
+      toast.error("이미지 파일만 업로드 가능합니다.")
       return
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      alert("파일 크기는 10MB 이하여야 합니다.")
+      toast.error("파일 크기는 10MB 이하여야 합니다.")
       return
     }
 
@@ -94,10 +95,10 @@ export default function TaskDetail() {
         })
       }
 
-      alert("과제 제출이 완료되었습니다!")
+      toast.success("과제 제출이 완료되었습니다!")
     } catch (error) {
       console.error("❌ 과제 제출 실패:", error)
-      alert("과제 제출에 실패했습니다. 다시 시도해주세요.")
+      toast.error("과제 제출에 실패했습니다. 다시 시도해주세요.")
     } finally {
       setIsUploading(false)
       // input 초기화
@@ -121,7 +122,7 @@ export default function TaskDetail() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-gray-50 max-w-md mx-auto">
       {/* Header */}
       <header className="bg-white px-4 pt-safe border-b border-gray-200">
         <div className="flex items-center justify-center py-4 relative">

@@ -471,7 +471,7 @@ export default function DetailManage() {
                 onClick={handleSaveOverallComment}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
               >
-                총평 저장
+                총평 작성
               </button>
             </div>
           </div>

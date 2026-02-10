@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import toast from "react-hot-toast";
 import {
   Dialog,
   DialogContent,
@@ -29,7 +30,6 @@ export default function MentiMain() {
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [yesterdayDate, setYesterdayDate] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isPlannerCompleted, setIsPlannerCompleted] = useState(false);
   const [checkedTasks, setCheckedTasks] = useState<Set<number>>(new Set());
   const [isZoomModalOpen, setIsZoomModalOpen] = useState(false);
   const [zoomDate, setZoomDate] = useState("");
@@ -92,10 +92,6 @@ export default function MentiMain() {
         .filter(task => task.completed)
         .map(task => task.id);
       setCheckedTasks(new Set(completedTaskIds));
-
-      // 하나라도 completed: true이면 플래너 마감된 것으로 간주
-      const hasCompletedTask = data.tasks.some(task => task.completed);
-      setIsPlannerCompleted(hasCompletedTask);
     } catch (error) {
       console.error("할 일 목록 조회 실패:", error);
     } finally {
@@ -148,18 +144,17 @@ export default function MentiMain() {
     try {
       const taskIds = Array.from(checkedTasks);
       await completePlanner(formatDate(currentDate), taskIds);
-      setIsPlannerCompleted(true);
-      alert("플래너가 마감되었습니다!");
+      toast.success("플래너가 마감되었습니다!");
     } catch (error) {
       console.error("플래너 마감 실패:", error);
-      alert("플래너 마감에 실패했습니다.");
+      toast.error("플래너 마감에 실패했습니다.");
     }
   };
 
   // Zoom 미팅 신청
   const handleZoomSubmit = async () => {
     if (!zoomDate || !zoomTime) {
-      alert("날짜와 시간을 모두 선택해주세요.");
+      toast.error("날짜와 시간을 모두 선택해주세요.");
       return;
     }
 
@@ -169,13 +164,13 @@ export default function MentiMain() {
         preferredDate: zoomDate,
         preferredTime: zoomTime,
       });
-      alert("Zoom 미팅이 신청되었습니다!");
+      toast.success("Zoom 미팅이 신청되었습니다!");
       setIsZoomModalOpen(false);
       setZoomDate("");
       setZoomTime("");
     } catch (error) {
       console.error("Zoom 미팅 신청 실패:", error);
-      alert("Zoom 미팅 신청에 실패했습니다.");
+      toast.error("Zoom 미팅 신청에 실패했습니다.");
     } finally {
       setIsZoomSubmitting(false);
     }
@@ -241,7 +236,7 @@ export default function MentiMain() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-gray-50 max-w-md mx-auto">
       {/* Header with Date Selector and Week Calendar */}
       <Header
         currentDate={getDisplayDate(currentDate)}
@@ -382,17 +377,13 @@ export default function MentiMain() {
         <section className="mt-6">
           <Button
             onClick={handleCompletePlanner}
-            disabled={isPlannerCompleted || checkedTasks.size === 0}
+            disabled={checkedTasks.size === 0}
             className="w-full py-3 rounded-xl text-sm font-semibold bg-[#3d5af1] text-white hover:bg-[#2d4ae1] disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
           >
-            {isPlannerCompleted
-              ? "✓ 플래너 마감 완료"
-              : "플래너 마감 / 피드백 요청"}
+            플래너 마감 / 피드백 요청
           </Button>
           <p className="text-center text-xs text-gray-500 mt-2">
-            {isPlannerCompleted
-              ? "플래너가 마감되었습니다. 멘토의 피드백을 기다려주세요."
-              : checkedTasks.size === 0
+            {checkedTasks.size === 0
               ? "최소 1개 이상의 할 일을 완료해주세요."
               : "할 일을 완료한 후 눌러주세요. 멘토에게 피드백 요청이 전달됩니다."}
           </p>

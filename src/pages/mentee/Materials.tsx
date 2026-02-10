@@ -87,7 +87,7 @@ export default function Materials() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-gray-50 max-w-md mx-auto">
       {/* Header */}
       <header className="bg-white px-4 pt-safe border-b border-gray-200">
         <div className="flex items-center justify-center py-4">

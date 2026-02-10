@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useNavigate, useParams } from "react-router-dom"
 import BottomNav from "@/components/layout/BottomNav"
 import { getFeedbacksByDate } from "@/lib/api/mentee"
+import toast from "react-hot-toast"
 import type { YesterdayFeedbackResponse } from "@/types/api"
 
 export default function FeedbackPage() {
@@ -43,7 +44,7 @@ export default function FeedbackPage() {
         setFeedbackData(data)
       } catch (error) {
         console.error("피드백 조회 실패:", error)
-        alert("피드백을 불러오는데 실패했습니다.")
+        toast.error("피드백을 불러오는데 실패했습니다.")
       } finally {
         setIsLoading(false)
       }
@@ -87,7 +88,7 @@ export default function FeedbackPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-gray-50 max-w-md mx-auto">
       {/* Header */}
       <header className="bg-white px-4 pt-safe border-b border-gray-200">
         <div className="flex items-center justify-center py-4 relative">
