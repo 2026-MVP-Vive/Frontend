@@ -1,124 +1,124 @@
-import { useState, useEffect } from "react"
-import { ChevronLeft, FileText, Camera } from "lucide-react"
-import { useNavigate, useParams } from "react-router-dom"
-import toast from "react-hot-toast"
-import { Button } from "@/components/ui/button"
-import { getTaskDetail, submitTaskImage } from "@/lib/api/mentee"
-import type { TaskDetailResponse } from "@/types/api"
+import { useState, useEffect } from "react";
+import { ChevronLeft, FileText, Camera } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
+import toast from "react-hot-toast";
+import { Button } from "@/components/ui/button";
+import { getTaskDetail, submitTaskImage } from "@/lib/api/mentee";
+import type { TaskDetailResponse } from "@/types/api";
 
-type TabType = "materials" | "submit"
+type TabType = "materials" | "submit";
 
 export default function TaskDetail() {
-  const navigate = useNavigate()
-  const { id } = useParams<{ id: string }>()
-  const [activeTab, setActiveTab] = useState<TabType>("materials")
-  const [task, setTask] = useState<TaskDetailResponse | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [uploadedImages, setUploadedImages] = useState<string[]>([])
-  const [isUploading, setIsUploading] = useState(false)
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const [activeTab, setActiveTab] = useState<TabType>("materials");
+  const [task, setTask] = useState<TaskDetailResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   // 할 일 상세 조회
   useEffect(() => {
     const loadTaskDetail = async () => {
-      if (!id) return
+      if (!id) return;
 
-      setIsLoading(true)
+      setIsLoading(true);
       try {
-        const data = await getTaskDetail(Number(id))
-        setTask(data)
+        const data = await getTaskDetail(Number(id));
+        setTask(data);
 
         // 기존 제출 사진이 있으면 표시
         if (data.submission) {
-          const existingImageUrl = `${import.meta.env.VITE_API_BASE_URL || 'https://seolstudy.duckdns.org'}${data.submission.imageUrl}`
-          console.log("📷 기존 제출 이미지:", existingImageUrl)
-          setUploadedImages([existingImageUrl])
+          const existingImageUrl = `${import.meta.env.VITE_API_BASE_URL || "https://seolstudy.duckdns.org"}${data.submission.imageUrl}`;
+          console.log("📷 기존 제출 이미지:", existingImageUrl);
+          setUploadedImages([existingImageUrl]);
         }
       } catch (error) {
-        console.error('할 일 상세 조회 실패:', error)
-        toast.error('할 일 정보를 불러오는데 실패했습니다.')
-        navigate(-1)
+        console.error("할 일 상세 조회 실패:", error);
+        toast.error("할 일 정보를 불러오는데 실패했습니다.");
+        navigate(-1);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    loadTaskDetail()
-  }, [id, navigate])
+    loadTaskDetail();
+  }, [id, navigate]);
 
   // 과목별 색상 매핑
   const getSubjectColor = (subject: string) => {
     switch (subject) {
-      case 'KOREAN':
-        return 'bg-red-500 text-white'
-      case 'ENGLISH':
-        return 'bg-blue-500 text-white'
-      case 'MATH':
-        return 'bg-green-500 text-white'
+      case "KOREAN":
+        return "bg-red-500 text-white";
+      case "ENGLISH":
+        return "bg-blue-500 text-white";
+      case "MATH":
+        return "bg-green-500 text-white";
       default:
-        return 'bg-gray-500 text-white'
+        return "bg-gray-500 text-white";
     }
-  }
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !id) return
+    const file = e.target.files?.[0];
+    if (!file || !id) return;
 
     // 파일 크기 및 타입 검증
     if (!file.type.startsWith("image/")) {
-      toast.error("이미지 파일만 업로드 가능합니다.")
-      return
+      toast.error("이미지 파일만 업로드 가능합니다.");
+      return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("파일 크기는 10MB 이하여야 합니다.")
-      return
+      toast.error("파일 크기는 10MB 이하여야 합니다.");
+      return;
     }
 
-    setIsUploading(true)
+    setIsUploading(true);
 
     try {
       // API 호출하여 서버에 업로드
-      const submission = await submitTaskImage(Number(id), file)
-      console.log("📤 제출 API 응답:", submission)
+      const submission = await submitTaskImage(Number(id), file);
+      console.log("📤 제출 API 응답:", submission);
 
       // 업로드 성공 - 미리보기 이미지 추가
-      const imageUrl = `${import.meta.env.VITE_API_BASE_URL || 'https://seolstudy.duckdns.org'}${submission.imageUrl}`
-      console.log("🖼️ 생성된 이미지 URL:", imageUrl)
+      const imageUrl = `${import.meta.env.VITE_API_BASE_URL || "https://seolstudy.duckdns.org"}${submission.imageUrl}`;
+      console.log("🖼️ 생성된 이미지 URL:", imageUrl);
 
-      setUploadedImages([imageUrl])
+      setUploadedImages([imageUrl]);
 
       // task 상태 업데이트
       if (task) {
         setTask({
           ...task,
-          submission: submission
-        })
+          submission: submission,
+        });
       }
 
-      toast.success("과제 제출이 완료되었습니다!")
+      toast.success("과제 제출이 완료되었습니다!");
     } catch (error) {
-      console.error("❌ 과제 제출 실패:", error)
-      toast.error("과제 제출에 실패했습니다. 다시 시도해주세요.")
+      console.error("❌ 과제 제출 실패:", error);
+      toast.error("과제 제출에 실패했습니다. 다시 시도해주세요.");
     } finally {
-      setIsUploading(false)
+      setIsUploading(false);
       // input 초기화
-      e.target.value = ""
+      e.target.value = "";
     }
-  }
+  };
 
   const handleDownload = (downloadUrl: string, fileName: string) => {
-    const link = document.createElement('a')
-    link.href = `${import.meta.env.VITE_API_BASE_URL || 'https://seolstudy.duckdns.org'}${downloadUrl}`
-    link.download = fileName
-    link.click()
-  }
+    const link = document.createElement("a");
+    link.href = `${import.meta.env.VITE_API_BASE_URL || "https://seolstudy.duckdns.org"}${downloadUrl}`;
+    link.download = fileName;
+    link.click();
+  };
 
   if (isLoading || !task) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <p className="text-gray-500">로딩 중...</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -148,25 +148,21 @@ export default function TaskDetail() {
             </span>
 
             {task.mentorAssigned && (
-              <span className="text-xs px-2.5 py-1 bg-blue-500 bg-opacity-10 text-blue-600 rounded font-medium">
+              <span className="text-xs px-2.5 py-1 bg-blue-500 bg-opacity-10 text-white rounded font-medium">
                 멘토 과제
               </span>
             )}
 
             {task.mentorAssigned && (
-              <span className="text-xs px-2.5 py-1 bg-red-500 bg-opacity-10 text-red-600 rounded font-medium">
+              <span className="text-xs px-2.5 py-1 bg-red-500 bg-opacity-10 text-white rounded font-medium">
                 업로드 필수
               </span>
             )}
 
-            <span className="text-xs text-gray-500 ml-auto">
-              {task.date}
-            </span>
+            <span className="text-xs text-gray-500 ml-auto">{task.date}</span>
           </div>
 
-          <h2 className="text-lg font-bold text-gray-900 mb-2">
-            {task.title}
-          </h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-2">{task.title}</h2>
 
           {task.goal && (
             <p className="text-sm text-gray-600 leading-relaxed">
@@ -236,7 +232,12 @@ export default function TaskDetail() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleDownload(material.downloadUrl, material.fileName)}
+                        onClick={() =>
+                          handleDownload(
+                            material.downloadUrl,
+                            material.fileName,
+                          )
+                        }
                         className="flex-shrink-0"
                       >
                         다운로드
@@ -308,20 +309,23 @@ export default function TaskDetail() {
                           src={image}
                           alt={`Upload ${index + 1}`}
                           className="w-full h-full object-cover"
-                          onLoad={() => console.log("✅ 이미지 로드 성공:", image)}
+                          onLoad={() =>
+                            console.log("✅ 이미지 로드 성공:", image)
+                          }
                           onError={(e) => {
-                            console.error("❌ 이미지 로드 실패:", image)
-                            const imgElement = e.target as HTMLImageElement
-                            imgElement.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f0f0f0' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999'%3E로드 실패%3C/text%3E%3C/svg%3E"
+                            console.error("❌ 이미지 로드 실패:", image);
+                            const imgElement = e.target as HTMLImageElement;
+                            imgElement.src =
+                              "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f0f0f0' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999'%3E로드 실패%3C/text%3E%3C/svg%3E";
                           }}
                         />
                         {/* 제출 완료된 경우 삭제 버튼 숨김 */}
                         {!task.submission && (
                           <button
                             onClick={() => {
-                              setUploadedImages(prev =>
-                                prev.filter((_, i) => i !== index)
-                              )
+                              setUploadedImages((prev) =>
+                                prev.filter((_, i) => i !== index),
+                              );
                             }}
                             className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600 transition-colors"
                           >
@@ -378,5 +382,5 @@ export default function TaskDetail() {
         </div>
       </main>
     </div>
-  )
+  );
 }

@@ -327,6 +327,7 @@ export interface MentorTask {
   uploadRequired: boolean
   submission: TaskSubmission | null
   feedback: Feedback | null
+  hasFeedback: boolean
 }
 
 // 멘토용 솔루션 (linkedTaskCount, createdAt 포함)
@@ -360,4 +361,13 @@ export interface UpdateSolutionRequest {
   subject?: Subject
   materials?: File[]
   deleteFileIds?: number[]
+}
+
+// 총평 조회 응답
+export interface OverallFeedbackResponse {
+  id: number
+  date: string
+  content: string
+  hasOverallFeedback: boolean
+  updatedAt: string
 }

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
+import { sendFCMTokenToServer, setupFCMMessageListener } from "@/utils/fcm";
 import {
   Dialog,
   DialogContent,
@@ -102,7 +103,8 @@ export default function MentiMain() {
   // 어제자 피드백 조회
   const loadYesterdayFeedback = async () => {
     try {
-      const data = await getYesterdayFeedback();
+      const dateStr = formatDate(currentDate);
+      const data = await getYesterdayFeedback(dateStr);
       setFeedbacks(data.feedbacks);
       setYesterdayDate(data.date); // 어제 날짜 저장
     } catch (error) {
@@ -115,9 +117,18 @@ export default function MentiMain() {
     loadTasks();
   }, [currentDate]);
 
-  // 어제자 피드백 조회 (최초 1회만)
+  // 어제자 피드백 조회 (날짜 변경 시마다)
   useEffect(() => {
     loadYesterdayFeedback();
+  }, [currentDate]);
+
+  // FCM 토큰 전송 및 메시지 리스너 설정 (로그인 후 1회)
+  useEffect(() => {
+    sendFCMTokenToServer();
+    const unsubscribe = setupFCMMessageListener();
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   // 할 일 로컬 체크 토글 (API 호출 없음)

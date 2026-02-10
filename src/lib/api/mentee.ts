@@ -107,21 +107,24 @@ export const toggleTaskCompletion = async (
 
 /**
  * 어제자 피드백 조회
+ * @param date - 기준 날짜 (YYYY-MM-DD, 선택, 기본값: 오늘)
  */
-export const getYesterdayFeedback =
-  async (): Promise<YesterdayFeedbackResponse> => {
-    const response = await apiClient.get<
-      ApiResponse<YesterdayFeedbackResponse>
-    >('/mentee/feedbacks/yesterday')
+export const getYesterdayFeedback = async (
+  date?: string
+): Promise<YesterdayFeedbackResponse> => {
+  const response = await apiClient.get<
+    ApiResponse<YesterdayFeedbackResponse>
+  >(
+    '/mentee/feedbacks/yesterday',
+    date ? { params: { date } } : undefined
+  )
 
-    if (!response.data.success || !response.data.data) {
-      throw new Error(
-        response.data.message || '피드백 조회에 실패했습니다.'
-      )
-    }
-
-    return response.data.data
+  if (!response.data.success || !response.data.data) {
+    throw new Error(response.data.message || '피드백 조회에 실패했습니다.')
   }
+
+  return response.data.data
+}
 
 /**
  * 코멘트/질문 등록

@@ -58,6 +58,16 @@ export default function Solution() {
     return colors[subject] || "bg-gray-100 text-gray-700";
   };
 
+  // 과목 코드를 이름으로 변환
+  const getSubjectName = (subject: string) => {
+    const names: Record<string, string> = {
+      KOREAN: "국어",
+      ENGLISH: "영어",
+      MATH: "수학",
+    };
+    return names[subject] || subject;
+  };
+
   const handleAdd = () => {
     setShowAddForm(true);
     setEditingId(null);
@@ -93,7 +103,13 @@ export default function Solution() {
 
         setSolutions(
           solutions.map((s) =>
-            s.id === editingId ? updated : s
+            s.id === editingId
+              ? {
+                  ...updated,
+                  subjectName: getSubjectName(updated.subject),
+                  materials: updated.materials || s.materials || []
+                }
+              : s
           )
         );
         setEditingId(null);
@@ -107,7 +123,14 @@ export default function Solution() {
           formData.materialFiles.length > 0 ? formData.materialFiles : undefined
         );
 
-        setSolutions([...solutions, newSolution]);
+        setSolutions([
+          ...solutions,
+          {
+            ...newSolution,
+            subjectName: getSubjectName(newSolution.subject),
+            materials: newSolution.materials || []
+          }
+        ]);
         setShowAddForm(false);
         toast.success("솔루션이 추가되었습니다.");
       }
@@ -351,7 +374,7 @@ export default function Solution() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      {solution.materials.length > 0 ? (
+                      {solution.materials && solution.materials.length > 0 ? (
                         <div className="flex flex-col gap-1">
                           {solution.materials.map((material) => (
                             <button

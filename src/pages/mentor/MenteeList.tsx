@@ -4,6 +4,7 @@ import { User, CheckCircle2, Clock, AlertCircle, Bell } from "lucide-react";
 import toast from "react-hot-toast";
 import { getStudents, getNotifications, confirmZoomMeeting } from "@/lib/api/mentor";
 import type { Student, Notification } from "@/types/api";
+import { sendFCMTokenToServer, setupFCMMessageListener } from "@/utils/fcm";
 
 export default function MenteeList() {
   const navigate = useNavigate();
@@ -31,7 +32,7 @@ export default function MenteeList() {
     loadStudents();
   }, []);
 
-  // 알림 목록 로드 (멘토용)
+  // 알림 목록 로드
   const loadNotifications = async () => {
     try {
       const data = await getNotifications(true); // 미확인만 조회
@@ -42,18 +43,27 @@ export default function MenteeList() {
     }
   };
 
-  // 알림 폴링 (30초 간격)
+  // 알림 폴링 (1분 간격)
   useEffect(() => {
     loadNotifications(); // 초기 로드
 
     const interval = setInterval(() => {
       loadNotifications();
-    }, 30000); // 30초
+    }, 60000); // 1분
 
     return () => clearInterval(interval);
   }, []);
 
-  // 알림 확인 (Zoom 미팅 등)
+  // FCM 토큰 전송 및 메시지 리스너 설정 (로그인 후 1회)
+  useEffect(() => {
+    sendFCMTokenToServer();
+    const unsubscribe = setupFCMMessageListener();
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, []);
+
+  // 알림 확인 처리
   const handleConfirmNotification = async (notification: Notification) => {
     try {
       if (notification.type === "ZOOM_REQUEST" && notification.relatedId) {
@@ -184,15 +194,6 @@ export default function MenteeList() {
                         </div>
                       )}
                     </div>
-
-                    {/* 하단 버튼 */}
-                    {notifications.length > 0 && (
-                      <div className="border-t border-gray-200 px-4 py-3">
-                        <button className="text-sm text-blue-600 hover:text-blue-700 font-medium w-full text-center">
-                          모든 알림 보기
-                        </button>
-                      </div>
-                    )}
                   </div>
                 )}
               </div>

@@ -5,6 +5,7 @@ import {
   getStudentTasks,
   saveFeedback,
   saveOverallComment,
+  getOverallFeedback,
   confirmTask,
 } from "@/lib/api/mentor";
 import type { MentorTasksResponse, MentorTask } from "@/types/api";
@@ -23,6 +24,7 @@ export default function DetailManage() {
   const [feedbackContent, setFeedbackContent] = useState("");
   const [isImportant, setIsImportant] = useState(false);
   const [overallComment, setOverallComment] = useState("");
+  const [hasOverallFeedback, setHasOverallFeedback] = useState(false);
 
   // 할 일 목록 로드
   useEffect(() => {
@@ -40,6 +42,28 @@ export default function DetailManage() {
     };
 
     loadTasks();
+  }, [studentId, selectedDate]);
+
+  // 총평 작성 여부 확인
+  useEffect(() => {
+    const loadOverallFeedback = async () => {
+      try {
+        const response = await getOverallFeedback(studentId, selectedDate);
+        setHasOverallFeedback(response.hasOverallFeedback);
+        if (response.hasOverallFeedback) {
+          setOverallComment(response.content);
+        } else {
+          setOverallComment("");
+        }
+      } catch (error) {
+        console.error("총평 조회 실패:", error);
+        // 에러 시 작성 가능 상태로 설정
+        setHasOverallFeedback(false);
+        setOverallComment("");
+      }
+    };
+
+    loadOverallFeedback();
   }, [studentId, selectedDate]);
 
   // 날짜 포맷 (YYYY-MM-DD → MM.DD 요일)
@@ -146,6 +170,11 @@ export default function DetailManage() {
     try {
       await saveOverallComment(studentId, selectedDate, overallComment);
       alert("총평이 저장되었습니다.");
+
+      // 총평 상태 새로고침
+      const response = await getOverallFeedback(studentId, selectedDate);
+      setHasOverallFeedback(response.hasOverallFeedback);
+      setOverallComment(response.content);
     } catch (error) {
       console.error("총평 저장 실패:", error);
       alert("총평 저장에 실패했습니다.");
@@ -400,8 +429,14 @@ export default function DetailManage() {
 
         {/* Right: 피드백 작성 */}
         <div className="bg-white rounded-xl p-6 shadow-sm">
-          <h2 className="text-base font-bold text-gray-900 mb-4">
+          <h2 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
             ✍️ 피드백 작성
+            {selectedTaskId &&
+              data.tasks.find((t) => t.id === selectedTaskId)?.hasFeedback && (
+                <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded">
+                  작성 완료
+                </span>
+              )}
           </h2>
 
           {selectedTaskId ? (
@@ -412,12 +447,23 @@ export default function DetailManage() {
                   선택된 할 일:{" "}
                   {data.tasks.find((t) => t.id === selectedTaskId)?.title}
                 </label>
+                {data.tasks.find((t) => t.id === selectedTaskId)
+                  ?.hasFeedback && (
+                  <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-700">
+                      ✓ 이미 작성된 피드백입니다.
+                    </p>
+                  </div>
+                )}
                 <textarea
                   value={feedbackContent}
                   onChange={(e) => setFeedbackContent(e.target.value)}
                   placeholder="피드백 내용을 작성하세요..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-vertical focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={4}
+                  disabled={
+                    data.tasks.find((t) => t.id === selectedTaskId)?.hasFeedback
+                  }
                 />
               </div>
 
@@ -429,6 +475,10 @@ export default function DetailManage() {
                     checked={isImportant}
                     onChange={(e) => setIsImportant(e.target.checked)}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    disabled={
+                      data.tasks.find((t) => t.id === selectedTaskId)
+                        ?.hasFeedback
+                    }
                   />
                   <span className="text-gray-700">
                     중요 표시 (멘티 요약에 노출)
@@ -439,7 +489,14 @@ export default function DetailManage() {
               <div className="border-t border-gray-200 pt-4 mb-4">
                 <button
                   onClick={handleSaveFeedback}
-                  className="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                  disabled={
+                    data.tasks.find((t) => t.id === selectedTaskId)?.hasFeedback
+                  }
+                  className={`w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    data.tasks.find((t) => t.id === selectedTaskId)?.hasFeedback
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-blue-600 text-white hover:bg-blue-700"
+                  }`}
                 >
                   피드백 저장
                 </button>
@@ -447,34 +504,51 @@ export default function DetailManage() {
             </>
           ) : (
             <div className="text-center py-8 text-gray-500 text-sm">
-              왼쪽 테이블에서 할 일을 선택하세요
+              왼쪽 제출현황에서 할 일을 선택하세요
             </div>
           )}
+        </div>
+      </div>
 
-          {/* 총평 */}
-          <div className="border-t border-gray-200 pt-4">
-            <label className="block text-xs font-semibold text-gray-600 mb-2">
-              총평
-            </label>
-            <textarea
-              value={overallComment}
-              onChange={(e) => setOverallComment(e.target.value)}
-              placeholder="오늘 전체 학습에 대한 총평..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-vertical focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
-              rows={3}
-            />
-            <div className="flex gap-2">
-              {/* <button className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
-                임시저장
-              </button> */}
-              <button
-                onClick={handleSaveOverallComment}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                총평 작성
-              </button>
-            </div>
+      {/* 총평 섹션 (독립적으로 분리) */}
+      <div className="bg-white rounded-xl p-6 shadow-sm mt-6">
+        <h2 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <span className="w-1 h-5 bg-blue-600 rounded"></span>
+          오늘 전체 학습 총평
+          {hasOverallFeedback && (
+            <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded">
+              작성 완료
+            </span>
+          )}
+        </h2>
+        {hasOverallFeedback && (
+          <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-700">
+              ✓ 이미 작성된 총평입니다. 수정이 필요한 경우 내용을 변경하고
+              저장해주세요.
+            </p>
           </div>
+        )}
+        <textarea
+          value={overallComment}
+          onChange={(e) => setOverallComment(e.target.value)}
+          placeholder="오늘 전체 학습에 대한 총평을 작성하세요..."
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-vertical focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+          rows={4}
+          disabled={hasOverallFeedback}
+        />
+        <div className="flex justify-end">
+          <button
+            onClick={handleSaveOverallComment}
+            disabled={hasOverallFeedback}
+            className={`px-6 py-2 text-sm font-medium rounded-lg transition-colors ${
+              hasOverallFeedback
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-blue-600 text-white hover:bg-blue-700"
+            }`}
+          >
+            총평 저장
+          </button>
         </div>
       </div>
     </div>

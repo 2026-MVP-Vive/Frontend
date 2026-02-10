@@ -202,7 +202,7 @@ get_network_request(reqid: xxx)
 
 2. API_DETAIL_SPEC.md에서 API 찾기
    → GET /api/v1/mentee/tasks?date=YYYY-MM-DD
-   → GET /api/v1/mentee/feedbacks/yesterday
+   → GET /api/v1/mentee/feedbacks/yesterday?date=YYYY-MM-DD (선택)
    → POST /api/v1/mentee/comments
 
 3. 구현

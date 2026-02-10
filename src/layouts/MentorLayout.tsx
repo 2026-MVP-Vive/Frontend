@@ -43,7 +43,7 @@ export default function MentorLayout() {
         {/* 로고 */}
         <div className="p-6 border-b border-gray-200">
           <h1 className="text-2xl font-bold">
-            <span className="text-gray-900">섬</span>
+            <span className="text-gray-900">설</span>
             <span className="text-blue-600">스터디</span>
           </h1>
           <p className="text-sm text-gray-500 mt-1">멘토 관리 시스템</p>

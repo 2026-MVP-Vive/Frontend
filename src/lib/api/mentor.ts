@@ -8,6 +8,7 @@ import type {
   Subject,
   NotificationsResponse,
   ZoomMeeting,
+  OverallFeedbackResponse,
 } from '@/types/api'
 
 /**
@@ -249,6 +250,27 @@ export const saveFeedback = async (
 
   if (!response.data.success || !response.data.data) {
     throw new Error(response.data.message || '피드백 저장에 실패했습니다.')
+  }
+
+  return response.data.data
+}
+
+/**
+ * 총평 조회
+ * @param studentId - 멘티 ID
+ * @param date - 조회 날짜 (YYYY-MM-DD)
+ */
+export const getOverallFeedback = async (
+  studentId: number,
+  date: string
+): Promise<OverallFeedbackResponse> => {
+  const response = await apiClient.get<ApiResponse<OverallFeedbackResponse>>(
+    `/mentor/students/${studentId}/feedbacks/overall`,
+    { params: { date } }
+  )
+
+  if (!response.data.success || !response.data.data) {
+    throw new Error(response.data.message || '총평 조회에 실패했습니다.')
   }
 
   return response.data.data
