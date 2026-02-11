@@ -5,7 +5,6 @@ import toast from "react-hot-toast";
 import {
   getStudents,
   getNotifications,
-  confirmZoomMeeting,
   markNotificationAsRead,
 } from "@/lib/api/mentor";
 import type { Student, Notification } from "@/types/api";
@@ -94,19 +93,9 @@ export default function MenteeList() {
     }
   };
 
-  // Zoom 미팅 확인 처리
-  const handleConfirmZoomRequest = async () => {
-    if (!selectedZoomRequest || !selectedZoomRequest.relatedId) return;
-
-    try {
-      await confirmZoomMeeting(selectedZoomRequest.relatedId);
-      toast.success("Zoom 미팅이 확인되었습니다.");
-      setSelectedZoomRequest(null);
-      loadNotifications(); // 목록 새로고침
-    } catch (error) {
-      console.error("Zoom 미팅 확인 실패:", error);
-      toast.error("Zoom 미팅 확인에 실패했습니다.");
-    }
+  // Zoom 미팅 팝업 닫기
+  const handleConfirmZoomRequest = () => {
+    setSelectedZoomRequest(null);
   };
 
   // 날짜 포맷 (YYYY-MM-DD → MM.DD)
@@ -404,12 +393,12 @@ export default function MenteeList() {
             </div>
 
             <div className="flex gap-2">
-              <button
+              {/* <button
                 onClick={() => setSelectedZoomRequest(null)}
                 className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
               >
                 취소
-              </button>
+              </button> */}
               <button
                 onClick={handleConfirmZoomRequest}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
