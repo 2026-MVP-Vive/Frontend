@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { createTask } from "@/lib/api";
-import { submitTaskImage } from "@/lib/api/mentee";
+import { submitTask } from "@/lib/api/mentee";
 import type { Subject } from "@/types/api";
 
 export default function TaskNew() {
@@ -82,7 +82,7 @@ export default function TaskNew() {
 
       // 2. 인증사진이 있으면 업로드
       if (imageFile && task.id) {
-        await submitTaskImage(task.id, imageFile);
+        await submitTask(task.id, imageFile);
         toast.success("할 일과 인증사진이 추가되었습니다!");
       } else {
         toast.success("할 일이 추가되었습니다!");

@@ -270,14 +270,18 @@ export const getColumns = async (
 /**
  * 과제 제출 (인증 사진 업로드)
  * @param taskId - 할 일 ID
- * @param imageFile - 업로드할 이미지 파일
+ * @param imageFile - 업로드할 이미지 파일 (옵셔널: 멘티가 만든 할일은 이미지 없이도 제출 가능)
  */
-export const submitTaskImage = async (
+export const submitTask = async (
   taskId: number,
-  imageFile: File
+  imageFile?: File
 ): Promise<import('@/types/api').TaskSubmission> => {
   const formData = new FormData()
-  formData.append('image', imageFile)
+
+  // 이미지가 있는 경우에만 추가
+  if (imageFile) {
+    formData.append('image', imageFile)
+  }
 
   const response = await apiClient.post<
     ApiResponse<import('@/types/api').TaskSubmission>

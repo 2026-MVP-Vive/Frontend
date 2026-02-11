@@ -132,20 +132,30 @@ export default function MentiMain() {
   }, []);
 
   // 할 일 로컬 체크 토글 (API 호출 없음)
-  const handleToggleTask = (taskId: number) => {
-    setCheckedTasks((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(taskId)) {
-        newSet.delete(taskId);
-      } else {
-        newSet.add(taskId);
-      }
-      return newSet;
-    });
-  };
+  // const handleToggleTask = (taskId: number) => {
+  //   setCheckedTasks((prev) => {
+  //     const newSet = new Set(prev);
+  //     if (newSet.has(taskId)) {
+  //       newSet.delete(taskId);
+  //     } else {
+  //       newSet.add(taskId);
+  //     }
+  //     return newSet;
+  //   });
+  // };
+
+  // 멘토 과제 중 미제출된 것이 있는지 확인
+  const hasPendingMentorTask = tasks.some(
+    (task) => task.mentorAssigned && !task.hasSubmission
+  );
 
   // 플래너 마감
   const handleCompletePlanner = async () => {
+    if (hasPendingMentorTask) {
+      toast.error("멘토가 부여한 과제를 모두 제출해주세요.");
+      return;
+    }
+
     if (
       !confirm("플래너를 마감하시겠습니까? 멘토에게 피드백 요청이 전달됩니다.")
     ) {
@@ -301,10 +311,14 @@ export default function MentiMain() {
                   <div
                     key={task.id}
                     onClick={() => navigate(`/mentee/task/${task.id}`)}
-                    className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-shadow"
+                    className={`bg-white rounded-xl p-4 shadow-sm border cursor-pointer hover:shadow-md transition-shadow ${
+                      task.hasSubmission
+                        ? "border-green-300 bg-green-50/30"
+                        : "border-gray-100"
+                    }`}
                   >
                     <div className="flex items-start gap-3">
-                      <button
+                      {/* <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleToggleTask(task.id);
@@ -332,7 +346,7 @@ export default function MentiMain() {
                             </svg>
                           )}
                         </div>
-                      </button>
+                      </button> */}
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
@@ -361,9 +375,27 @@ export default function MentiMain() {
                         </div>
                       </div>
 
-                      <span className="text-blue-600 font-medium text-sm whitespace-nowrap">
-                        {formatStudyTime(task.studyTime)}
-                      </span>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className="text-blue-600 font-medium text-sm whitespace-nowrap">
+                          {formatStudyTime(task.studyTime)}
+                        </span>
+                        {task.hasSubmission && (
+                          <div className="flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded-md">
+                            <svg
+                              className="w-3.5 h-3.5"
+                              fill="none"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2.5"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span className="text-xs font-semibold">제출완료</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -371,7 +403,7 @@ export default function MentiMain() {
             )}
 
             {/* Add Task Button - Always visible */}
-            <button
+            {/* <button
               onClick={() =>
                 navigate("/mentee/task/new", {
                   state: { date: formatDate(currentDate) },
@@ -380,7 +412,7 @@ export default function MentiMain() {
               className="w-full bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-gray-500 hover:bg-gray-50 transition-colors text-left min-h-[48px]"
             >
               + 할 일 추가
-            </button>
+            </button> */}
           </div>
         </section>
 
@@ -388,14 +420,14 @@ export default function MentiMain() {
         <section className="mt-6">
           <Button
             onClick={handleCompletePlanner}
-            disabled={checkedTasks.size === 0}
+            disabled={hasPendingMentorTask}
             className="w-full py-3 rounded-xl text-sm font-semibold bg-[#3d5af1] text-white hover:bg-[#2d4ae1] disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
           >
             플래너 마감 / 피드백 요청
           </Button>
-          <p className="text-center text-xs text-gray-500 mt-2">
-            {checkedTasks.size === 0
-              ? "최소 1개 이상의 할 일을 완료해주세요."
+          <p className="text-center text-xs text-red-500 mt-2 font-bold">
+            {hasPendingMentorTask
+              ? "⚠️ 멘토가 부여한 과제를 모두 제출해야 플래너를 마감할 수 있습니다."
               : "할 일을 완료한 후 눌러주세요. 멘토에게 피드백 요청이 전달됩니다."}
           </p>
         </section>

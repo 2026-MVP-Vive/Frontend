@@ -125,9 +125,21 @@ export default function DetailManage() {
 
   // 할 일 선택
   const handleTaskSelect = (task: MentorTask) => {
+    console.log("📝 선택된 task:", task);
+    console.log("📝 기존 피드백:", task.feedback);
+
     setSelectedTaskId(task.id);
-    setFeedbackContent(task.feedback?.content || "");
-    setIsImportant(task.feedback?.isImportant || false);
+
+    // 이미 작성된 피드백이 있으면 내용을 채움
+    if (task.feedback?.content) {
+      setFeedbackContent(task.feedback.content);
+      setIsImportant(task.feedback.isImportant || false);
+      console.log("✅ 피드백 내용 로드:", task.feedback.content);
+    } else {
+      setFeedbackContent("");
+      setIsImportant(false);
+      console.log("ℹ️ 새로운 피드백 작성");
+    }
   };
 
   // 피드백 저장

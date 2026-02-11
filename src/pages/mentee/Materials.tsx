@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { Paperclip } from "lucide-react"
-import { useNavigate } from "react-router-dom"
+// import { useNavigate } from "react-router-dom"
 import BottomNav from "@/components/layout/BottomNav"
 import { getSolutions } from "@/lib/api"
 import type { Solution, Subject } from "@/types/api"
@@ -16,7 +16,7 @@ interface ShortcutCard {
 type SubjectFilter = "all" | "KOREAN" | "ENGLISH" | "MATH"
 
 export default function Materials() {
-  const navigate = useNavigate()
+  // const navigate = useNavigate()
   const [selectedSubject, setSelectedSubject] = useState<SubjectFilter>("all")
   const [solutions, setSolutions] = useState<Solution[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -82,9 +82,9 @@ export default function Materials() {
     link.click()
   }
 
-  const handleShortcutClick = (path: string) => {
-    navigate(path)
-  }
+  // const handleShortcutClick = (path: string) => {
+  //   navigate(path)
+  // }
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 max-w-md mx-auto">
@@ -108,7 +108,7 @@ export default function Materials() {
             {shortcuts.map((shortcut) => (
               <button
                 key={shortcut.id}
-                onClick={() => handleShortcutClick(shortcut.path)}
+                onClick={() => alert('준비중입니다.')}
                 className="w-full bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex items-center gap-4"
               >
                 <div className="w-14 h-14 bg-gray-100 rounded-xl flex items-center justify-center flex-shrink-0 text-3xl">

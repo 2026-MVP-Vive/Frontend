@@ -113,7 +113,7 @@ export default function FeedbackPage() {
           </button>
 
           <h2 className="text-lg font-bold min-w-[200px] text-center">
-            {formatDateForDisplay(selectedDate)} 일
+            {formatDateForDisplay(selectedDate)}
           </h2>
 
           <button

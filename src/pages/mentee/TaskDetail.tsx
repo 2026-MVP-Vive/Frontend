@@ -3,7 +3,7 @@ import { ChevronLeft, FileText, Camera } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
-import { getTaskDetail, submitTaskImage } from "@/lib/api/mentee";
+import { getTaskDetail, submitTask } from "@/lib/api/mentee";
 import type { TaskDetailResponse } from "@/types/api";
 
 type TabType = "materials" | "submit";
@@ -15,7 +15,11 @@ export default function TaskDetail() {
   const [task, setTask] = useState<TaskDetailResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
+  const [uploadedImageFile, setUploadedImageFile] = useState<File | null>(null);
+  const [uploadedImagePreview, setUploadedImagePreview] = useState<
+    string | null
+  >(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 할 일 상세 조회
   useEffect(() => {
@@ -59,7 +63,7 @@ export default function TaskDetail() {
     }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !id) return;
 
@@ -74,35 +78,61 @@ export default function TaskDetail() {
       return;
     }
 
-    setIsUploading(true);
+    // 이미지 미리보기 생성
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setUploadedImagePreview(reader.result as string);
+      setUploadedImageFile(file);
+      toast.success("이미지가 선택되었습니다. 제출 버튼을 눌러주세요.");
+    };
+    reader.readAsDataURL(file);
+
+    // input 초기화
+    e.target.value = "";
+  };
+
+  // 과제 제출 핸들러
+  const handleSubmit = async () => {
+    if (!id || !task) return;
+
+    // 멘토 과제인데 이미지가 없는 경우 에러
+    if (task.mentorAssigned && !uploadedImageFile && !task.submission) {
+      toast.error("멘토 과제는 인증 사진 업로드가 필수입니다.");
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
-      // API 호출하여 서버에 업로드
-      const submission = await submitTaskImage(Number(id), file);
+      // API 호출하여 서버에 제출
+      const submission = await submitTask(
+        Number(id),
+        uploadedImageFile || undefined,
+      );
       console.log("📤 제출 API 응답:", submission);
 
-      // 업로드 성공 - 미리보기 이미지 추가
-      const imageUrl = `${import.meta.env.VITE_API_BASE_URL || "https://seolstudy.duckdns.org"}${submission.imageUrl}`;
-      console.log("🖼️ 생성된 이미지 URL:", imageUrl);
-
-      setUploadedImages([imageUrl]);
-
-      // task 상태 업데이트
-      if (task) {
-        setTask({
-          ...task,
-          submission: submission,
-        });
+      // 제출 성공 - task 상태 업데이트
+      if (submission.imageUrl) {
+        const imageUrl = `${import.meta.env.VITE_API_BASE_URL || "https://seolstudy.duckdns.org"}${submission.imageUrl}`;
+        console.log("🖼️ 생성된 이미지 URL:", imageUrl);
+        setUploadedImages([imageUrl]);
       }
+
+      setTask({
+        ...task,
+        submission: submission,
+      });
+
+      // 상태 초기화
+      setUploadedImageFile(null);
+      setUploadedImagePreview(null);
 
       toast.success("과제 제출이 완료되었습니다!");
     } catch (error) {
       console.error("❌ 과제 제출 실패:", error);
       toast.error("과제 제출에 실패했습니다. 다시 시도해주세요.");
     } finally {
-      setIsUploading(false);
-      // input 초기화
-      e.target.value = "";
+      setIsSubmitting(false);
     }
   };
 
@@ -264,24 +294,28 @@ export default function TaskDetail() {
                   <label
                     htmlFor="photo-upload"
                     className={`block border-2 border-dashed border-gray-300 rounded-xl p-8 text-center transition-colors ${
-                      isUploading
+                      isSubmitting
                         ? "cursor-not-allowed opacity-50"
                         : "cursor-pointer hover:border-blue-400 hover:bg-blue-50"
                     }`}
                   >
                     <Camera className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                     <p className="text-sm text-gray-600 mb-1">
-                      {isUploading
-                        ? "업로드 중..."
+                      {isSubmitting
+                        ? "제출 중..."
                         : "카메라로 촬영하거나 갤러리에서 선택하세요"}
                     </p>
-                    <p className="text-xs text-gray-400">(JPG, 최대 10MB)</p>
+                    <p className="text-xs text-gray-400">
+                      (JPG, 최대 10MB)
+                      {!task.mentorAssigned &&
+                        " - 이미지 없이도 제출 가능합니다"}
+                    </p>
                     <input
                       id="photo-upload"
                       type="file"
                       accept="image/*"
                       onChange={handleImageUpload}
-                      disabled={isUploading}
+                      disabled={isSubmitting}
                       className="hidden"
                     />
                   </label>
@@ -299,6 +333,7 @@ export default function TaskDetail() {
 
                 {/* Preview Thumbnails */}
                 <div className="mt-4 grid grid-cols-2 gap-3">
+                  {/* 기존 제출 이미지 또는 새로운 미리보기 */}
                   {uploadedImages.length > 0 ? (
                     uploadedImages.map((image, index) => (
                       <div
@@ -319,21 +354,25 @@ export default function TaskDetail() {
                               "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f0f0f0' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999'%3E로드 실패%3C/text%3E%3C/svg%3E";
                           }}
                         />
-                        {/* 제출 완료된 경우 삭제 버튼 숨김 */}
-                        {!task.submission && (
-                          <button
-                            onClick={() => {
-                              setUploadedImages((prev) =>
-                                prev.filter((_, i) => i !== index),
-                              );
-                            }}
-                            className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600 transition-colors"
-                          >
-                            ×
-                          </button>
-                        )}
                       </div>
                     ))
+                  ) : uploadedImagePreview ? (
+                    <div className="relative aspect-square rounded-lg overflow-hidden border border-gray-200">
+                      <img
+                        src={uploadedImagePreview}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        onClick={() => {
+                          setUploadedImagePreview(null);
+                          setUploadedImageFile(null);
+                        }}
+                        className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600 transition-colors"
+                      >
+                        ×
+                      </button>
+                    </div>
                   ) : (
                     <>
                       <div className="aspect-square bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center">
@@ -347,12 +386,26 @@ export default function TaskDetail() {
                 </div>
 
                 {/* Warning Message for Mentor Tasks */}
-                {task.mentorAssigned && (
+                {task.mentorAssigned && !task.submission && (
                   <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
                     <p className="text-xs text-red-600 font-medium">
                       * 멘토 생성 과제입니다. 인증 사진 업로드가 필수입니다.
                     </p>
                   </div>
+                )}
+
+                {/* Submit Button */}
+                {!task.submission && (
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={
+                      isSubmitting ||
+                      (task.mentorAssigned && !uploadedImageFile)
+                    }
+                    className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? "제출 중..." : "과제 제출"}
+                  </Button>
                 )}
               </div>
             </section>
