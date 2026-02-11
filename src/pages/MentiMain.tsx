@@ -403,7 +403,7 @@ export default function MentiMain() {
             )}
 
             {/* Add Task Button - Always visible */}
-            {/* <button
+            <button
               onClick={() =>
                 navigate("/mentee/task/new", {
                   state: { date: formatDate(currentDate) },
@@ -412,7 +412,7 @@ export default function MentiMain() {
               className="w-full bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-gray-500 hover:bg-gray-50 transition-colors text-left min-h-[48px]"
             >
               + 할 일 추가
-            </button> */}
+            </button>
           </div>
         </section>
 
