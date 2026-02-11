@@ -523,10 +523,7 @@ export default function DetailManage() {
         </h2>
         {hasOverallFeedback && (
           <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-700">
-              ✓ 이미 작성된 총평입니다. 수정이 필요한 경우 내용을 변경하고
-              저장해주세요.
-            </p>
+            <p className="text-sm text-blue-700">✓ 이미 작성된 총평입니다.</p>
           </div>
         )}
         <textarea
