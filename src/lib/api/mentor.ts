@@ -358,3 +358,19 @@ export const confirmZoomMeeting = async (
 
   return response.data.data;
 };
+
+/**
+ * 알림 읽음 처리
+ * @param notificationId - 알림 ID
+ */
+export const markNotificationAsRead = async (
+  notificationId: number,
+): Promise<void> => {
+  const response = await apiClient.patch<ApiResponse<null>>(
+    `/mentor/notifications/${notificationId}/read`,
+  );
+
+  if (!response.data.success) {
+    throw new Error(response.data.message || "알림 읽음 처리에 실패했습니다.");
+  }
+};

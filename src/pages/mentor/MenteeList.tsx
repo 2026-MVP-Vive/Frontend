@@ -2,7 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, CheckCircle2, Clock, AlertCircle, Bell } from "lucide-react";
 import toast from "react-hot-toast";
-import { getStudents, getNotifications, confirmZoomMeeting } from "@/lib/api/mentor";
+import {
+  getStudents,
+  getNotifications,
+  confirmZoomMeeting,
+  markNotificationAsRead,
+} from "@/lib/api/mentor";
 import type { Student, Notification } from "@/types/api";
 import { sendFCMTokenToServer, setupFCMMessageListener } from "@/utils/fcm";
 
@@ -13,6 +18,8 @@ export default function MenteeList() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [selectedZoomRequest, setSelectedZoomRequest] =
+    useState<Notification | null>(null);
 
   // 멘티 목록 로드
   useEffect(() => {
@@ -63,17 +70,42 @@ export default function MenteeList() {
     };
   }, []);
 
-  // 알림 확인 처리
-  const handleConfirmNotification = async (notification: Notification) => {
-    try {
-      if (notification.type === "ZOOM_REQUEST" && notification.relatedId) {
-        await confirmZoomMeeting(notification.relatedId);
-        toast.success("Zoom 미팅이 확인되었습니다.");
-        loadNotifications(); // 목록 새로고침
+  // 알림 클릭 처리
+  const handleNotificationClick = async (notification: Notification) => {
+    // 읽음 처리
+    if (!notification.read) {
+      try {
+        await markNotificationAsRead(notification.id);
+        // 로컬 상태 업데이트
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n.id === notification.id ? { ...n, read: true } : n,
+          ),
+        );
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      } catch (error) {
+        console.error("알림 읽음 처리 실패:", error);
       }
+    }
+
+    // 알림 타입에 따른 처리
+    if (notification.type === "ZOOM_REQUESTED") {
+      setSelectedZoomRequest(notification);
+    }
+  };
+
+  // Zoom 미팅 확인 처리
+  const handleConfirmZoomRequest = async () => {
+    if (!selectedZoomRequest || !selectedZoomRequest.relatedId) return;
+
+    try {
+      await confirmZoomMeeting(selectedZoomRequest.relatedId);
+      toast.success("Zoom 미팅이 확인되었습니다.");
+      setSelectedZoomRequest(null);
+      loadNotifications(); // 목록 새로고침
     } catch (error) {
-      console.error("알림 처리 실패:", error);
-      toast.error("알림 처리에 실패했습니다.");
+      console.error("Zoom 미팅 확인 실패:", error);
+      toast.error("Zoom 미팅 확인에 실패했습니다.");
     }
   };
 
@@ -97,7 +129,6 @@ export default function MenteeList() {
     return `${year}.${month}.${day} ${weekday}요일`;
   };
 
-
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -109,7 +140,7 @@ export default function MenteeList() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto px-4 py-6">
+      <main className="flex-1 overflow-y-auto px-4 pt-12 pb-6">
         {/* Header */}
         <div className="mb-6">
           <div
@@ -133,13 +164,21 @@ export default function MenteeList() {
 
               {/* 알림 버튼 */}
               <div className="relative">
+                {/* 알림 말풍선 (미읽음 알림이 있을 때만) */}
+                {unreadCount > 0 && !showNotifications && (
+                  <div className="absolute -top-10 right-0 bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap animate-pulse">
+                    새 알림 {unreadCount}건{/* 말풍선 꼬리 (아래쪽) */}
+                    <div className="absolute bottom-0 right-4 transform translate-y-1/2 rotate-45 w-2 h-2 bg-blue-600"></div>
+                  </div>
+                )}
+
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
                   className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <Bell className="w-5 h-5 text-gray-700" />
                   {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
                   )}
                 </button>
 
@@ -161,7 +200,12 @@ export default function MenteeList() {
                           {notifications.map((notification) => (
                             <div
                               key={notification.id}
-                              className="px-4 py-3 hover:bg-gray-50 bg-blue-50"
+                              onClick={() =>
+                                handleNotificationClick(notification)
+                              }
+                              className={`px-4 py-3 hover:bg-gray-50 cursor-pointer ${
+                                !notification.read ? "bg-blue-50" : ""
+                              }`}
                             >
                               <div className="flex items-start justify-between">
                                 <div className="flex-1">
@@ -169,20 +213,15 @@ export default function MenteeList() {
                                     {notification.title}
                                   </p>
                                   <p className="text-xs text-gray-500 mt-1">
-                                    {notification.studentName} — {notification.message}
+                                    {notification.studentName} —{" "}
+                                    {notification.message}
                                   </p>
                                   <p className="text-xs text-gray-400 mt-1">
-                                    {new Date(notification.createdAt).toLocaleString("ko-KR")}
+                                    {new Date(
+                                      notification.createdAt,
+                                    ).toLocaleString("ko-KR")}
                                   </p>
                                 </div>
-                                {notification.type === "ZOOM_REQUEST" && (
-                                  <button
-                                    onClick={() => handleConfirmNotification(notification)}
-                                    className="ml-2 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
-                                  >
-                                    확인
-                                  </button>
-                                )}
                               </div>
                             </div>
                           ))}
@@ -316,6 +355,71 @@ export default function MenteeList() {
           </div>
         )}
       </main>
+
+      {/* Zoom 미팅 신청 팝업 */}
+      {selectedZoomRequest && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-96 shadow-xl">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
+              Zoom 미팅 신청
+            </h3>
+
+            <div className="space-y-4 mb-6">
+              {/* 학생 이름 */}
+              <div>
+                <p className="text-sm text-gray-500 mb-1">학생</p>
+                <p className="text-base font-medium text-gray-900">
+                  {selectedZoomRequest.studentName || "정보 없음"}
+                </p>
+              </div>
+
+              {/* 희망 날짜 및 시간 */}
+              {selectedZoomRequest.requestDate ? (
+                <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                  <p className="text-sm font-medium text-blue-900 mb-3">
+                    희망 일정
+                  </p>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-blue-700">날짜</span>
+                      <span className="text-sm font-medium text-blue-900">
+                        {selectedZoomRequest.requestDate.date}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-blue-700">시간</span>
+                      <span className="text-sm font-medium text-blue-900">
+                        {selectedZoomRequest.requestDate.time}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <p className="text-sm text-gray-500 text-center">
+                    희망 일정 정보를 불러오는 중...
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setSelectedZoomRequest(null)}
+                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleConfirmZoomRequest}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

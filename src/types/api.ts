@@ -197,7 +197,7 @@ export interface ZoomMeetingsResponse {
 }
 
 // 알림 타입
-export type NotificationType = 'ZOOM_REQUEST' | 'PLANNER_COMPLETED' | 'TASK_SUBMITTED'
+export type NotificationType = 'ZOOM_REQUESTED' | 'PLANNER_COMPLETED' | 'TASK_SUBMITTED'
 
 // 알림
 export interface Notification {
@@ -206,9 +206,13 @@ export interface Notification {
   title: string
   message: string
   relatedId: number | null
-  isRead: boolean
+  read: boolean
   createdAt: string
   studentName: string
+  requestDate?: {
+    date: string
+    time: string
+  }
 }
 
 // 알림 목록 조회 응답
