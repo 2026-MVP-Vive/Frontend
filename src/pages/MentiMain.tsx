@@ -90,8 +90,8 @@ export default function MentiMain() {
 
       // completed가 true인 task들을 자동으로 체크
       const completedTaskIds = data.tasks
-        .filter(task => task.completed)
-        .map(task => task.id);
+        .filter((task) => task.completed)
+        .map((task) => task.id);
       setCheckedTasks(new Set(completedTaskIds));
     } catch (error) {
       console.error("할 일 목록 조회 실패:", error);
@@ -146,10 +146,10 @@ export default function MentiMain() {
 
   // 멘토 과제 중 미제출된 것이 있는지 확인
   const hasPendingMentorTask = tasks.some(
-    (task) => task.mentorAssigned && !task.hasSubmission
+    (task) => task.mentorAssigned && !task.hasSubmission,
   );
 
-  // 플래너 마감
+  // 플레너 마감
   const handleCompletePlanner = async () => {
     if (hasPendingMentorTask) {
       toast.error("멘토가 부여한 과제를 모두 제출해주세요.");
@@ -157,7 +157,7 @@ export default function MentiMain() {
     }
 
     if (
-      !confirm("플래너를 마감하시겠습니까? 멘토에게 피드백 요청이 전달됩니다.")
+      !confirm("플레너를 마감하시겠습니까? 멘토에게 피드백 요청이 전달됩니다.")
     ) {
       return;
     }
@@ -165,10 +165,10 @@ export default function MentiMain() {
     try {
       const taskIds = Array.from(checkedTasks);
       await completePlanner(formatDate(currentDate), taskIds);
-      toast.success("플래너가 마감되었습니다!");
+      toast.success("플레너가 마감되었습니다!");
     } catch (error) {
-      console.error("플래너 마감 실패:", error);
-      toast.error("플래너 마감에 실패했습니다.");
+      console.error("플레너 마감 실패:", error);
+      toast.error("플레너 마감에 실패했습니다.");
     }
   };
 
@@ -392,7 +392,9 @@ export default function MentiMain() {
                             >
                               <path d="M5 13l4 4L19 7"></path>
                             </svg>
-                            <span className="text-xs font-semibold">제출완료</span>
+                            <span className="text-xs font-semibold">
+                              제출완료
+                            </span>
                           </div>
                         )}
                       </div>
@@ -416,18 +418,18 @@ export default function MentiMain() {
           </div>
         </section>
 
-        {/* 플래너 마감 버튼 */}
+        {/* 플레너 마감 버튼 */}
         <section className="mt-6">
           <Button
             onClick={handleCompletePlanner}
             disabled={hasPendingMentorTask}
             className="w-full py-3 rounded-xl text-sm font-semibold bg-[#3d5af1] text-white hover:bg-[#2d4ae1] disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
           >
-            플래너 마감 / 피드백 요청
+            플레너 마감 / 피드백 요청
           </Button>
           <p className="text-center text-xs text-red-500 mt-2 font-bold">
             {hasPendingMentorTask
-              ? "⚠️ 멘토가 부여한 과제를 모두 제출해야 플래너를 마감할 수 있습니다."
+              ? "⚠️ 멘토가 부여한 과제를 모두 제출해야 플레너를 마감할 수 있습니다."
               : "할 일을 완료한 후 눌러주세요. 멘토에게 피드백 요청이 전달됩니다."}
           </p>
         </section>
@@ -448,9 +450,7 @@ export default function MentiMain() {
               {feedbacks.map((feedback) => (
                 <div
                   key={feedback.id}
-                  onClick={() =>
-                    navigate(`/mentee/feedback/${yesterdayDate}`)
-                  }
+                  onClick={() => navigate(`/mentee/feedback/${yesterdayDate}`)}
                   className="bg-white rounded-xl p-4 shadow-sm border-l-4 border-blue-600 cursor-pointer hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-start gap-3 mb-3">

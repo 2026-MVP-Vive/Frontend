@@ -260,7 +260,7 @@ export default function DetailManage() {
         </div>
       </div>
 
-      {/* 플래너 마감 상태 */}
+      {/* 플레너 마감 상태 */}
       <div
         className={`mb-4 flex items-center gap-3 p-3 rounded-lg ${
           data.completed
@@ -275,8 +275,8 @@ export default function DetailManage() {
           }`}
         >
           {data.completed
-            ? "멘티가 플래너 마감 요청을 했습니다"
-            : "멘티가 아직 플래너 마감 요청을 하지 않았습니다"}
+            ? "멘티가 플레너 마감 요청을 했습니다"
+            : "멘티가 아직 플레너 마감 요청을 하지 않았습니다"}
         </span>
       </div>
 
