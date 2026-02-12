@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
 
 // Layouts
 import MentorLayout from './layouts/MentorLayout'
@@ -21,6 +22,20 @@ import TaskRegister from './pages/mentor/TaskRegister'
 import Solution from './pages/mentor/Solution'
 
 function AppContent() {
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    // 🔥 서비스 워커로부터 알림 클릭 메시지 수신
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data?.type === 'NOTIFICATION_CLICK' && event.data?.url) {
+          console.log('[App] 알림 클릭으로 이동:', event.data.url)
+          navigate(event.data.url)
+        }
+      })
+    }
+  }, [navigate])
+
   return (
     <>
       <Routes>

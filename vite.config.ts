@@ -10,7 +10,7 @@ export default defineConfig({
     host: "0.0.0.0", // 모든 네트워크 인터페이스에서 접근 허용
     port: 5173,
     allowedHosts: [
-      "5ea9-112-144-94-183.ngrok-free.app", // ngrok 주소 추가
+      "9dc0-2001-e60-3168-a1af-5d7f-f0bb-389d-411.ngrok-free.app", // ngrok 주소 추가
     ],
   },
   plugins: [
@@ -63,7 +63,7 @@ export default defineConfig({
         ],
       },
       devOptions: {
-        enabled: true,
+        enabled: false, // 🔥 개발 서비스 워커 비활성화 (FCM만 사용)
         type: "module",
       },
     }),

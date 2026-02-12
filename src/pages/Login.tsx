@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { setAuthToken, setRefreshToken, setUser } from "@/utils/auth";
+import { setAuthToken, setRefreshToken, setUser, isAuthenticated, getUserRole } from "@/utils/auth";
 import { login } from "@/lib/api/auth";
 import { GraduationCap, User, Lock } from "lucide-react";
 
@@ -12,6 +12,18 @@ export default function Login() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  // 🔥 이미 로그인되어 있으면 홈으로 리다이렉트
+  useEffect(() => {
+    if (isAuthenticated()) {
+      const role = getUserRole();
+      if (role === "MENTOR") {
+        navigate("/mentor", { replace: true });
+      } else if (role === "MENTEE") {
+        navigate("/mentee", { replace: true });
+      }
+    }
+  }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
