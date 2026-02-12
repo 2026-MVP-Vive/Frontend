@@ -144,15 +144,13 @@ export default function MentiMain() {
   //   });
   // };
 
-  // 멘토 과제 중 미제출된 것이 있는지 확인
-  const hasPendingMentorTask = tasks.some(
-    (task) => task.mentorAssigned && !task.hasSubmission,
-  );
+  // 1개라도 제출한 task가 있는지 확인
+  const hasAnySubmission = tasks.some((task) => task.hasSubmission);
 
   // 플레너 마감
   const handleCompletePlanner = async () => {
-    if (hasPendingMentorTask) {
-      toast.error("멘토가 부여한 과제를 모두 제출해주세요.");
+    if (!hasAnySubmission) {
+      toast.error("최소 1개 이상의 과제를 제출해주세요.");
       return;
     }
 
@@ -422,14 +420,14 @@ export default function MentiMain() {
         <section className="mt-6">
           <Button
             onClick={handleCompletePlanner}
-            disabled={hasPendingMentorTask}
+            disabled={!hasAnySubmission}
             className="w-full py-3 rounded-xl text-sm font-semibold bg-[#3d5af1] text-white hover:bg-[#2d4ae1] disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
           >
             플레너 마감 / 피드백 요청
           </Button>
           <p className="text-center text-xs text-red-500 mt-2 font-bold">
-            {hasPendingMentorTask
-              ? "⚠️ 멘토가 부여한 과제를 모두 제출해야 플레너를 마감할 수 있습니다."
+            {!hasAnySubmission
+              ? "⚠️ 최소 1개 이상의 과제를 제출해야 플레너를 마감할 수 있습니다."
               : "할 일을 완료한 후 눌러주세요. 멘토에게 피드백 요청이 전달됩니다."}
           </p>
         </section>
